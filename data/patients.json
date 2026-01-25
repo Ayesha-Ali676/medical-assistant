@@ -1,0 +1,286 @@
+[
+  {
+    "patient_id": "P001",
+    "name": "John Smith",
+    "age": 65,
+    "gender": "Male",
+    "chief_complaint": "Chest pain and shortness of breath",
+    "vitals": {
+      "bp": "145/92",
+      "hr": "88",
+      "temp": "37.2",
+      "rr": "18",
+      "spo2": "96"
+    },
+    "lab_results": [
+      {
+        "test_name": "Glucose",
+        "value": 156,
+        "unit": "mg/dL",
+        "reference_range": "70-100",
+        "status": "High"
+      },
+      {
+        "test_name": "HbA1c",
+        "value": 7.8,
+        "unit": "%",
+        "reference_range": "<5.7",
+        "status": "High"
+      },
+      {
+        "test_name": "Creatinine",
+        "value": 1.3,
+        "unit": "mg/dL",
+        "reference_range": "0.7-1.3",
+        "status": "Normal"
+      },
+      {
+        "test_name": "Potassium",
+        "value": 4.2,
+        "unit": "mEq/L",
+        "reference_range": "3.5-5.0",
+        "status": "Normal"
+      }
+    ],
+    "current_medications": [
+      {
+        "name": "Metformin",
+        "dose": "500mg",
+        "frequency": "twice daily",
+        "route": "oral"
+      },
+      {
+        "name": "Lisinopril",
+        "dose": "10mg",
+        "frequency": "daily",
+        "route": "oral"
+      },
+      {
+        "name": "Aspirin",
+        "dose": "81mg",
+        "frequency": "daily",
+        "route": "oral"
+      }
+    ],
+    "allergies": ["Penicillin"],
+    "medical_history": [
+      "Type 2 Diabetes Mellitus",
+      "Hypertension",
+      "Hyperlipidemia"
+    ]
+  },
+  {
+    "patient_id": "P002",
+    "name": "Sarah Johnson",
+    "age": 52,
+    "gender": "Female",
+    "chief_complaint": "Persistent cough and fever",
+    "vitals": {
+      "bp": "128/78",
+      "hr": "92",
+      "temp": "38.5",
+      "rr": "22",
+      "spo2": "94"
+    },
+    "lab_results": [
+      {
+        "test_name": "WBC",
+        "value": 14.5,
+        "unit": "K/uL",
+        "reference_range": "4.5-11.0",
+        "status": "High"
+      },
+      {
+        "test_name": "CRP",
+        "value": 45,
+        "unit": "mg/L",
+        "reference_range": "<10",
+        "status": "High"
+      },
+      {
+        "test_name": "Glucose",
+        "value": 98,
+        "unit": "mg/dL",
+        "reference_range": "70-100",
+        "status": "Normal"
+      }
+    ],
+    "current_medications": [
+      {
+        "name": "Ibuprofen",
+        "dose": "400mg",
+        "frequency": "as needed",
+        "route": "oral"
+      }
+    ],
+    "allergies": ["Sulfa drugs"],
+    "medical_history": [
+      "Asthma",
+      "Seasonal allergies"
+    ]
+  },
+  {
+    "patient_id": "P003",
+    "name": "Michael Chen",
+    "age": 78,
+    "gender": "Male",
+    "chief_complaint": "Dizziness and weakness",
+    "vitals": {
+      "bp": "98/62",
+      "hr": "58",
+      "temp": "36.8",
+      "rr": "16",
+      "spo2": "97"
+    },
+    "lab_results": [
+      {
+        "test_name": "Hemoglobin",
+        "value": 9.2,
+        "unit": "g/dL",
+        "reference_range": "13.5-17.5",
+        "status": "Low"
+      },
+      {
+        "test_name": "Potassium",
+        "value": 5.8,
+        "unit": "mEq/L",
+        "reference_range": "3.5-5.0",
+        "status": "High"
+      },
+      {
+        "test_name": "Creatinine",
+        "value": 2.1,
+        "unit": "mg/dL",
+        "reference_range": "0.7-1.3",
+        "status": "High"
+      }
+    ],
+    "current_medications": [
+      {
+        "name": "Warfarin",
+        "dose": "5mg",
+        "frequency": "daily",
+        "route": "oral"
+      },
+      {
+        "name": "Metoprolol",
+        "dose": "50mg",
+        "frequency": "twice daily",
+        "route": "oral"
+      },
+      {
+        "name": "Spironolactone",
+        "dose": "25mg",
+        "frequency": "daily",
+        "route": "oral"
+      }
+    ],
+    "allergies": [],
+    "medical_history": [
+      "Atrial Fibrillation",
+      "Chronic Kidney Disease Stage 3",
+      "Heart Failure",
+      "Anemia"
+    ]
+  },
+  {
+    "patient_id": "P004",
+    "name": "Emily Rodriguez",
+    "age": 45,
+    "gender": "Female",
+    "chief_complaint": "Severe headache and nausea",
+    "vitals": {
+      "bp": "168/105",
+      "hr": "102",
+      "temp": "37.0",
+      "rr": "20",
+      "spo2": "98"
+    },
+    "lab_results": [
+      {
+        "test_name": "Glucose",
+        "value": 92,
+        "unit": "mg/dL",
+        "reference_range": "70-100",
+        "status": "Normal"
+      },
+      {
+        "test_name": "Sodium",
+        "value": 138,
+        "unit": "mEq/L",
+        "reference_range": "136-145",
+        "status": "Normal"
+      }
+    ],
+    "current_medications": [
+      {
+        "name": "Sertraline",
+        "dose": "50mg",
+        "frequency": "daily",
+        "route": "oral"
+      }
+    ],
+    "allergies": ["Latex"],
+    "medical_history": [
+      "Migraine",
+      "Anxiety disorder"
+    ]
+  },
+  {
+    "patient_id": "P005",
+    "name": "Robert Williams",
+    "age": 58,
+    "gender": "Male",
+    "chief_complaint": "Abdominal pain and vomiting",
+    "vitals": {
+      "bp": "135/88",
+      "hr": "95",
+      "temp": "37.8",
+      "rr": "18",
+      "spo2": "97"
+    },
+    "lab_results": [
+      {
+        "test_name": "Lipase",
+        "value": 450,
+        "unit": "U/L",
+        "reference_range": "13-60",
+        "status": "Critical"
+      },
+      {
+        "test_name": "Glucose",
+        "value": 245,
+        "unit": "mg/dL",
+        "reference_range": "70-100",
+        "status": "High"
+      },
+      {
+        "test_name": "HbA1c",
+        "value": 9.2,
+        "unit": "%",
+        "reference_range": "<5.7",
+        "status": "High"
+      }
+    ],
+    "current_medications": [
+      {
+        "name": "Simvastatin",
+        "dose": "40mg",
+        "frequency": "daily",
+        "route": "oral"
+      },
+      {
+        "name": "Metformin",
+        "dose": "1000mg",
+        "frequency": "twice daily",
+        "route": "oral"
+      }
+    ],
+    "allergies": [],
+    "medical_history": [
+      "Type 2 Diabetes Mellitus",
+      "Hyperlipidemia",
+      "Obesity"
+    ]
+  }
+]

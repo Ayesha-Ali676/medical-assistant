@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Frontend - React Dashboard
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - medassist-network
+
+  # Backend - FastAPI Service
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ALLOWED_ORIGINS=http://localhost:5173
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+    networks:
+      - medassist-network
+
+networks:
+  medassist-network:
+    driver: bridge

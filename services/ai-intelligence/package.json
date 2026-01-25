@@ -1,0 +1,55 @@
+{
+  "name": "medassist-ai-intelligence",
+  "version": "1.0.0",
+  "description": "AI Intelligence Service for MedAssist Clinical Decision Support - For physician review only",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "helmet": "^6.1.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "winston": "^3.8.2",
+    "express-validator": "^6.15.0",
+    "pg": "^8.10.0",
+    "redis": "^4.6.6",
+    "uuid": "^9.0.0",
+    "natural": "^6.5.0",
+    "compromise": "^14.10.0",
+    "node-nlp": "^4.27.0",
+    "axios": "^1.4.0",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.22",
+    "supertest": "^6.3.3",
+    "fast-check": "^3.10.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/index.js"
+    ],
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  },
+  "keywords": [
+    "medical",
+    "nlp",
+    "clinical",
+    "ai",
+    "healthcare",
+    "decision-support"
+  ],
+  "author": "MedAssist Team",
+  "license": "PROPRIETARY"
+}

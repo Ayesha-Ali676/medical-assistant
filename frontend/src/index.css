@@ -1,0 +1,368 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ============================================
+   CLINICAL COLOR PALETTE
+   Professional Hospital-Grade Design System
+   ============================================ */
+
+:root {
+  /* Primary Medical Blue - Calm, Professional, Trustworthy */
+  --medical-blue-dark: #1E3A5F;
+  --medical-blue-light: #2D5A8C;
+  --medical-blue-accent: #4B7BA7;
+  
+  /* Neutral Grays - Clean, Readable, Non-Distracting */
+  --neutral-white: #FFFFFF;
+  --neutral-gray-50: #F8FAFC;
+  --neutral-gray-100: #F1F5F9;
+  --neutral-gray-200: #E2E8F0;
+  --neutral-gray-300: #CBD5E1;
+  --neutral-gray-400: #94A3B8;
+  --neutral-gray-600: #475569;
+  --neutral-gray-700: #334155;
+  --neutral-gray-900: #0F172A;
+  
+  /* Status Colors - Muted, Clinical, Purposeful */
+  --status-critical: #B91C1C;      /* Muted red - not bright */
+  --status-warning: #D97706;       /* Amber - not orange */
+  --status-normal: #059669;        /* Soft green */
+  --status-info: #0284C7;          /* Clinical blue */
+  
+  /* Shadows - Subtle, Professional */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.12);
+  
+  /* Spacing System */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+}
+
+/* ============================================
+   RESET & BASE STYLES
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+  background-color: var(--neutral-gray-50);
+  color: var(--neutral-gray-900);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   TYPOGRAPHY SYSTEM
+   Clear Hierarchy, Professional, Readable
+   ============================================ */
+
+h1 {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--neutral-gray-900);
+  margin: 0;
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--neutral-gray-900);
+  margin: 0;
+}
+
+h3 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--neutral-gray-900);
+  margin: 0;
+}
+
+h4 {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--neutral-gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+p {
+  color: var(--neutral-gray-700);
+  line-height: 1.6;
+  margin: 0;
+}
+
+small {
+  font-size: 12px;
+  color: var(--neutral-gray-600);
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+  background: transparent;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--medical-blue-dark);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================
+   FORMS
+   ============================================ */
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--neutral-gray-700);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 14px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--neutral-gray-300);
+  border-radius: 6px;
+  background: var(--neutral-white);
+  color: var(--neutral-gray-900);
+  transition: all 0.15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--medical-blue-dark);
+  box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: var(--neutral-gray-100);
+  cursor: not-allowed;
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--neutral-gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--neutral-gray-300);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-gray-400);
+}
+
+/* ============================================
+   ACCESSIBILITY
+   ============================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--medical-blue-dark);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.uppercase {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================
+   ANIMATIONS - MINIMAL & PURPOSEFUL
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.2s ease-in;
+}
+
+.slide-in {
+  animation: slideIn 0.2s ease-out;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .header-bar,
+  .patient-list-panel,
+  .lab-alerts-panel {
+    display: none;
+  }
+
+  .patient-detail-panel {
+    padding: 0;
+  }
+
+  .section-card {
+    page-break-inside: avoid;
+  }
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+@media (max-width: 1400px) {
+  body {
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  h2 {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  h2 {
+    font-size: 16px;
+  }
+
+  h3 {
+    font-size: 14px;
+  }
+}
+

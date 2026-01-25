@@ -1,0 +1,20 @@
+{"connectionId":"5fb0633e-3d5c-40d5-b609-dd7783cbf154","level":"info","message":"EHR system registered: Epic Test Hospital (epic)","timestamp":"2026-01-25T15:16:04.393Z","type":"epic"}
+{"config":{"name":"Test Hospital","type":"epic"},"error":"Base URL is required","level":"error","message":"Failed to register EHR system","timestamp":"2026-01-25T15:16:04.429Z"}
+{"config":{"apiKey":"test-key","baseUrl":"https://example.com","name":"Test Hospital","type":"invalid-type"},"error":"Invalid EHR type. Must be one of: epic, cerner, allscripts, meditech, custom","level":"error","message":"Failed to register EHR system","timestamp":"2026-01-25T15:16:04.466Z"}
+{"connectionId":"0e3644df-a73b-422a-97e9-e036fef922a1","level":"info","message":"EHR system registered: epic Hospital (epic)","timestamp":"2026-01-25T15:16:04.473Z","type":"epic"}
+{"connectionId":"4d658107-f1a8-4071-a36e-865caf35be7b","level":"info","message":"EHR system registered: cerner Hospital (cerner)","timestamp":"2026-01-25T15:16:04.476Z","type":"cerner"}
+{"connectionId":"67492012-a9a3-475b-8924-686503f1c182","level":"info","message":"EHR system registered: allscripts Hospital (allscripts)","timestamp":"2026-01-25T15:16:04.478Z","type":"allscripts"}
+{"connectionId":"12a4df65-2778-4166-a49e-94538956d933","level":"info","message":"EHR system registered: meditech Hospital (meditech)","timestamp":"2026-01-25T15:16:04.480Z","type":"meditech"}
+{"connectionId":"f30ae9d6-d8a6-4e79-9c75-d0d1b26a8c68","level":"info","message":"EHR system registered: custom Hospital (custom)","timestamp":"2026-01-25T15:16:04.481Z","type":"custom"}
+{"connectionId":"3a8df7ec-372c-4534-9c80-a2359fef10cb","level":"info","message":"EHR system registered: Epic Hospital (epic)","timestamp":"2026-01-25T15:16:04.487Z","type":"epic"}
+{"connectionId":"a1674772-8f5c-4815-824d-d6cc7f417891","level":"info","message":"EHR system registered: Cerner Hospital (cerner)","timestamp":"2026-01-25T15:16:04.489Z","type":"cerner"}
+{"connectionId":"6e3a72f0-228a-4ac9-8a9e-14821a63c7d5","level":"info","message":"EHR system registered: Test Hospital (epic)","timestamp":"2026-01-25T15:16:04.493Z","type":"epic"}
+{"connectionId":"6e3a72f0-228a-4ac9-8a9e-14821a63c7d5","level":"info","message":"Connection removed","timestamp":"2026-01-25T15:16:04.495Z"}
+{"connectionId":"non-existent-id","error":"Connection not found: non-existent-id","level":"error","message":"Failed to remove connection","timestamp":"2026-01-25T15:16:04.499Z"}
+{"connectionId":"15972028-907e-4f70-a26e-e6d56fceb00f","level":"info","message":"EHR system registered: Test Hospital (epic)","timestamp":"2026-01-25T15:16:04.503Z","type":"epic"}
+{"connectionId":"15972028-907e-4f70-a26e-e6d56fceb00f","level":"info","message":"Cache cleared for connection","timestamp":"2026-01-25T15:16:04.504Z"}
+{"level":"info","message":"All cache cleared","timestamp":"2026-01-25T15:16:04.512Z"}
+{"connectionId":"66c65b54-0abc-46e0-afd5-c5f355364446","level":"info","message":"EHR system registered: Epic 1 (epic)","timestamp":"2026-01-25T15:16:04.528Z","type":"epic"}
+{"connectionId":"202f40f4-dadc-4a90-b306-b58236384233","level":"info","message":"EHR system registered: Cerner 1 (cerner)","timestamp":"2026-01-25T15:16:04.530Z","type":"cerner"}
+{"connectionId":"ff402146-a74d-4ec3-90d3-b0fe9dcd2ff3","level":"info","message":"EHR system registered: Allscripts 1 (allscripts)","timestamp":"2026-01-25T15:16:04.531Z","type":"allscripts"}
+{"connectionId":"ddb9fdba-9b05-4cb3-952d-e7f63bdc6810","level":"info","message":"EHR system registered: Test Hospital (epic)","timestamp":"2026-01-25T15:16:04.537Z","type":"epic"}
