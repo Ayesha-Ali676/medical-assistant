@@ -86,32 +86,35 @@ const App = () => {
   };
 
   const analyzePatient = async (patient) => {
-    console.log('Analyzing patient:', patient.patient_id);
-    try {
-      const response = await api.post('/analyze-patient', patient);
-      setAnalysis(response.data);
-    } catch (error) {
-      console.error('Analysis failed:', error.message);
-      // Create mock analysis for demo
-      setAnalysis({
-        summary: {
-          clinical_narrative: 'Patient presents with elevated glucose and blood pressure. Diabetes management requires review.',
-          key_findings: ['Elevated HbA1c', 'Stage 2 Hypertension', 'Multiple medications'],
-          urgency_score: 7,
-          priority_level: patient.priority
-        },
-        alerts: {
-          vitals: [],
-          labs: patient.lab_results?.filter(l => l.status !== 'Normal') || [],
-          medications: []
-        },
-        ml_risk: {
-          priority_score: 2,
-          label: 'High'
-        }
-      });
-    }
-  };
+  console.log('Analyzing patient:', patient.patient_id);
+  try {
+    // Remove frontend-only fields before sending to backend
+    const { priority, alertCount, ...patientData } = patient;
+    
+    const response = await api.post('/analyze-patient', patientData);
+    setAnalysis(response.data);
+  } catch (error) {
+    console.error('Analysis failed:', error.message);
+    // Create mock analysis for demo
+    setAnalysis({
+      summary: {
+        clinical_narrative: 'Patient presents with elevated glucose and blood pressure. Diabetes management requires review.',
+        key_findings: ['Elevated HbA1c', 'Stage 2 Hypertension', 'Multiple medications'],
+        urgency_score: 7,
+        priority_level: patient.priority
+      },
+      alerts: {
+        vitals: [],
+        labs: patient.lab_results?.filter(l => l.status !== 'Normal') || [],
+        medications: []
+      },
+      ml_risk: {
+        priority_score: 2,
+        label: 'High'
+      }
+    });
+  }
+};
 
   const getPriorityColor = (priority) => {
     switch (priority) {

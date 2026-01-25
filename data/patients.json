@@ -62,7 +62,9 @@
         "route": "oral"
       }
     ],
-    "allergies": ["Penicillin"],
+    "allergies": [
+      "Penicillin"
+    ],
     "medical_history": [
       "Type 2 Diabetes Mellitus",
       "Hypertension",
@@ -113,7 +115,9 @@
         "route": "oral"
       }
     ],
-    "allergies": ["Sulfa drugs"],
+    "allergies": [
+      "Sulfa drugs"
+    ],
     "medical_history": [
       "Asthma",
       "Seasonal allergies"
@@ -220,7 +224,9 @@
         "route": "oral"
       }
     ],
-    "allergies": ["Latex"],
+    "allergies": [
+      "Latex"
+    ],
     "medical_history": [
       "Migraine",
       "Anxiety disorder"
@@ -282,5 +288,23 @@
       "Hyperlipidemia",
       "Obesity"
     ]
+  },
+  {
+    "patient_id": "P604",
+    "name": "Marwa",
+    "age": 20,
+    "gender": "Female",
+    "chief_complaint": "fever",
+    "vitals": {
+      "bp": "120/80",
+      "hr": "72",
+      "temp": "37.0",
+      "rr": "16",
+      "spo2": "98"
+    },
+    "lab_results": [],
+    "current_medications": [],
+    "allergies": [],
+    "medical_history": []
   }
 ]

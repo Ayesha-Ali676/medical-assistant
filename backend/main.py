@@ -9,6 +9,12 @@ from models import PatientRecord, AIHistorySummary, LabResult, ScanResult
 from ai_service import get_gemini_summary, analyze_medical_report
 from safety_engine import check_vital_safety, check_lab_safety, check_drug_interactions
 from ml_service import ml_service
+import traceback
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -93,30 +99,47 @@ async def scan_report(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Report analysis failed: {str(e)}")
 
 @app.post("/analyze-patient", response_model=dict)
-async def analyze_patient(record: PatientRecord):
+async def analyze_patient(record: dict):
     """
     Analyze patient data using Gemini AI and safety checks
     For physician review only
     """
     try:
         # 1. Get AI Summary from Gemini
-        summary = get_gemini_summary(record.dict())
+        summary = get_gemini_summary(record)
         
         # 2. Run Rule-Based Safety Checks
-        vital_alerts = check_vital_safety(record.vitals)
-        lab_alerts = check_lab_safety(record.lab_results)
-        drug_alerts = check_drug_interactions([m.dict() for m in record.current_medications])
+        vital_alerts = check_vital_safety(record.get('vitals', {}))
+        
+        # Lab results
+        lab_results_list = record.get('lab_results', [])
+        lab_alerts = check_lab_safety(lab_results_list)
+        
+        # Medications
+        medications_list = record.get('current_medications', [])
+        drug_alerts = check_drug_interactions(medications_list)
         
         # 3. ML Risk Scoring
         # Extract features for ML model (simplified)
-        systolic = int(record.vitals.get("bp", "120/80").split('/')[0])
-        hr = int(record.vitals.get("hr", 72))
-        hba1c = next((l.value for l in record.lab_results if l.test_name.lower() == "hba1c"), 5.5)
+        vitals = record.get('vitals', {})
+        systolic = int(vitals.get("bp", "120/80").split('/')[0])
+        hr = int(vitals.get("hr", 72))
         
-        priority_score = ml_service.predict_priority(record.age, systolic, hr, hba1c)
+        # Safely get HbA1c value
+        hba1c = 5.5  # default
+        for lab in lab_results_list:
+            if lab.get("test_name", "").lower() == "hba1c":
+                hba1c = float(lab.get("value", 5.5))
+                break
         
-        return {
-            "summary": summary,
+        age = record.get('age', 50)
+        priority_score = ml_service.predict_priority(age, systolic, hr, hba1c)
+        
+        # Convert summary to dict if it's a Pydantic model
+        summary_dict = summary.dict() if hasattr(summary, 'dict') else summary
+        
+        response_data = {
+            "summary": summary_dict,
             "alerts": {
                 "vitals": vital_alerts,
                 "labs": lab_alerts,
@@ -127,14 +150,21 @@ async def analyze_patient(record: PatientRecord):
                 "label": ["Low", "Moderate", "High"][priority_score]
             },
             "ai_triage": {
-                "score": summary.urgency_score,
-                "level": summary.priority_level
+                "score": summary_dict.get("urgency_score", 5),
+                "level": summary_dict.get("priority_level", "Moderate")
             },
             "disclaimer": "For physician review only"
         }
+        
+        return response_data
+        
     except Exception as e:
+        logger.error(f"ERROR in analyze_patient: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
-
+    
+    
+    
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))

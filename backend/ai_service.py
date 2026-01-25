@@ -1,7 +1,12 @@
 import os
-import google.generativeai as genai
+import time
+from google import genai
+from google.genai import types
 from models import AIHistorySummary, ScanResult
 from dotenv import load_dotenv
+from functools import wraps
+import json
+import traceback
 
 load_dotenv()
 
@@ -10,18 +15,37 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY not found in environment variables")
 
-genai.configure(api_key=GEMINI_API_KEY)
+# Initialize the client
+client = genai.Client(api_key=GEMINI_API_KEY)
 
-def get_model(model_name="gemini-2.5-flash"):
-    """Get a Gemini model, with fallback to gemini-pro if needed"""
-    try:
-        return genai.GenerativeModel(model_name)
-    except:
-        return genai.GenerativeModel("gemini-2.5-flash")
+# Rate limiting configuration
+last_api_call_time = 0
+MIN_TIME_BETWEEN_CALLS = 4.0  # 4 seconds between calls (allows max 15 calls/minute)
 
-# Default model for general use
-model = get_model("gemini-2.5-flash")
+def rate_limit(func):
+    """Decorator to enforce rate limiting on API calls"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        global last_api_call_time
+        
+        # Calculate time since last call
+        current_time = time.time()
+        time_since_last_call = current_time - last_api_call_time
+        
+        # If not enough time has passed, wait
+        if time_since_last_call < MIN_TIME_BETWEEN_CALLS:
+            sleep_time = MIN_TIME_BETWEEN_CALLS - time_since_last_call
+            time.sleep(sleep_time)
+        
+        # Update last call time
+        last_api_call_time = time.time()
+        
+        # Call the original function
+        return func(*args, **kwargs)
+    
+    return wrapper
 
+@rate_limit
 def get_gemini_summary(patient_data: dict) -> AIHistorySummary:
     """
     Generate clinical summary using Gemini AI
@@ -75,18 +99,12 @@ Format your response as JSON with these exact keys:
     
     try:
         # Generate response from Gemini
-        # Try with flash first, then fallback to pro for text summary
-        try:
-            response = model.generate_content(prompt)
-        except Exception as e:
-            if "404" in str(e) or "not found" in str(e).lower():
-                fallback_model = genai.GenerativeModel("gemini-2.5-flash")
-                response = fallback_model.generate_content(prompt)
-            else:
-                raise e
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
         
         # Parse JSON response
-        import json
         response_text = response.text.strip()
         
         # Remove markdown code blocks if present
@@ -98,7 +116,6 @@ Format your response as JSON with these exact keys:
             response_text = response_text[:-3]
         
         response_text = response_text.strip()
-        
         result = json.loads(response_text)
         
         # Create AIHistorySummary object
@@ -114,9 +131,60 @@ Format your response as JSON with these exact keys:
         
         return summary
         
+    except json.JSONDecodeError as e:
+        # JSON parsing error
+        traceback.print_exc()
+        
+        return AIHistorySummary(
+            clinical_narrative=f"Patient presents with {patient_data['chief_complaint']}. Clinical review recommended.",
+            key_findings=[
+                "AI response parsing failed",
+                "Manual physician review required",
+                f"Chief complaint: {patient_data['chief_complaint']}"
+            ],
+            risk_assessment={
+                "cardiac": "Unknown",
+                "respiratory": "Unknown",
+                "metabolic": "Unknown"
+            },
+            urgency_score=5,
+            priority_level="Moderate",
+            recommendations=[
+                "Complete manual clinical assessment",
+                "Review all lab results",
+                "Verify medication interactions"
+            ],
+            disclaimer="For physician review only - AI response parsing failed"
+        )
+    except AttributeError as e:
+        # Response object doesn't have expected attributes
+        traceback.print_exc()
+        
+        return AIHistorySummary(
+            clinical_narrative=f"Patient presents with {patient_data['chief_complaint']}. Clinical review recommended.",
+            key_findings=[
+                "AI response format error",
+                "Manual physician review required",
+                f"Chief complaint: {patient_data['chief_complaint']}"
+            ],
+            risk_assessment={
+                "cardiac": "Unknown",
+                "respiratory": "Unknown",
+                "metabolic": "Unknown"
+            },
+            urgency_score=5,
+            priority_level="Moderate",
+            recommendations=[
+                "Complete manual clinical assessment",
+                "Review all lab results",
+                "Verify medication interactions"
+            ],
+            disclaimer="For physician review only - AI response format error"
+        )
     except Exception as e:
         # Fallback response if Gemini fails
-        print(f"Gemini API Error: {str(e)}")
+        traceback.print_exc()
+        
         return AIHistorySummary(
             clinical_narrative=f"Patient presents with {patient_data['chief_complaint']}. Clinical review recommended.",
             key_findings=[
@@ -157,6 +225,7 @@ def format_medications(meds: list) -> str:
         for med in meds
     ])
 
+@rate_limit
 def analyze_medical_report(image_bytes: bytes) -> ScanResult:
     """
     Analyze medical report image using Gemini Vision
@@ -181,26 +250,25 @@ def analyze_medical_report(image_bytes: bytes) -> ScanResult:
     """
     
     try:
-        # Prepare image for Gemini
-        image_part = {
-            "mime_type": "image/jpeg", # Assuming JPEG, but Gemini is flexible
-            "data": image_bytes
-        }
+        # Upload the image
+        uploaded_file = client.files.upload(file_data=image_bytes)
         
-        # Vision requires 1.5 models. If 1.5-flash fails, tried flash-latest or pro-vision
-        try:
-            response = model.generate_content([prompt, image_part])
-        except Exception as e:
-            if "404" in str(e) or "not found" in str(e).lower():
-                # Try gemini-1.5-pro or legacy gemini-pro-vision
-                try:
-                    alt_model = genai.GenerativeModel("gemini-2.5-flash")
-                    response = alt_model.generate_content([prompt, image_part])
-                except:
-                    alt_model = genai.GenerativeModel("gemini-2.5-flash")
-                    response = alt_model.generate_content([prompt, image_part])
-            else:
-                raise e
+        # Generate content with image
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[
+                types.Content(
+                    role="user",
+                    parts=[
+                        types.Part.from_uri(
+                            file_uri=uploaded_file.uri,
+                            mime_type="image/jpeg"
+                        ),
+                        types.Part.from_text(text=prompt)
+                    ]
+                )
+            ]
+        )
 
         response_text = response.text.strip()
         
@@ -210,7 +278,6 @@ def analyze_medical_report(image_bytes: bytes) -> ScanResult:
         elif "```" in response_text:
             response_text = response_text.split("```")[1].split("```")[0].strip()
             
-        import json
         result = json.loads(response_text)
         
         return ScanResult(
@@ -221,7 +288,8 @@ def analyze_medical_report(image_bytes: bytes) -> ScanResult:
             is_valid_medical_report=result.get("is_valid_medical_report", True)
         )
     except Exception as e:
-        print(f"Vision API Error: {str(e)}")
+        traceback.print_exc()
+        
         return ScanResult(
             summary=f"Error analyzing report: {str(e)}",
             key_observations=[],
