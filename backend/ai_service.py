@@ -12,15 +12,15 @@ if not GEMINI_API_KEY:
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-def get_model(model_name="gemini-1.5-flash"):
+def get_model(model_name="gemini-2.5-flash"):
     """Get a Gemini model, with fallback to gemini-pro if needed"""
     try:
         return genai.GenerativeModel(model_name)
     except:
-        return genai.GenerativeModel("gemini-pro")
+        return genai.GenerativeModel("gemini-2.5-flash")
 
 # Default model for general use
-model = get_model("gemini-1.5-flash")
+model = get_model("gemini-2.5-flash")
 
 def get_gemini_summary(patient_data: dict) -> AIHistorySummary:
     """
@@ -80,7 +80,7 @@ Format your response as JSON with these exact keys:
             response = model.generate_content(prompt)
         except Exception as e:
             if "404" in str(e) or "not found" in str(e).lower():
-                fallback_model = genai.GenerativeModel("gemini-pro")
+                fallback_model = genai.GenerativeModel("gemini-2.5-flash")
                 response = fallback_model.generate_content(prompt)
             else:
                 raise e
@@ -194,10 +194,10 @@ def analyze_medical_report(image_bytes: bytes) -> ScanResult:
             if "404" in str(e) or "not found" in str(e).lower():
                 # Try gemini-1.5-pro or legacy gemini-pro-vision
                 try:
-                    alt_model = genai.GenerativeModel("gemini-1.5-pro")
+                    alt_model = genai.GenerativeModel("gemini-2.5-flash")
                     response = alt_model.generate_content([prompt, image_part])
                 except:
-                    alt_model = genai.GenerativeModel("gemini-pro-vision")
+                    alt_model = genai.GenerativeModel("gemini-2.5-flash")
                     response = alt_model.generate_content([prompt, image_part])
             else:
                 raise e
