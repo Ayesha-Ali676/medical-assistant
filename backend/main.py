@@ -186,9 +186,44 @@ async def clinical_assessment(patient_data: dict):
         logger.error(f"Clinical assessment failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Assessment failed: {str(e)}")
     
-    
+# Add this endpoint after the @app.post("/patients") endpoint in main.py
+
+@app.delete("/patients/{patient_id}")
+async def delete_patient(patient_id: str):
+    """Delete a patient from the database"""
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        patients_path = os.path.join(current_dir, "..", "data", "patients.json")
+        
+        # Read current patients
+        with open(patients_path, "r") as f:
+            patients = json.load(f)
+        
+        # Find and remove the patient
+        original_count = len(patients)
+        patients = [p for p in patients if p.get("patient_id") != patient_id]
+        
+        if len(patients) == original_count:
+            raise HTTPException(status_code=404, detail=f"Patient {patient_id} not found")
+        
+        # Save updated list
+        with open(patients_path, "w") as f:
+            json.dump(patients, f, indent=2)
+        
+        return {
+            "status": "success", 
+            "message": f"Patient {patient_id} deleted successfully",
+            "deleted_count": original_count - len(patients)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))   
     
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host="127.0.0.1", port=port, reload=True)
+    
+    

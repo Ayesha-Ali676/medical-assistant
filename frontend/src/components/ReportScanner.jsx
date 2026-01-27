@@ -79,7 +79,7 @@ const ReportScanner = () => {
         {loading && (
           <div className="mt-8 text-center space-y-4">
             <Loader2 className="w-10 h-10 animate-spin text-purple-600 mx-auto" />
-            <p className="text-lg font-semibold animate-pulse">Gemini is analyzing medical report...</p>
+            <p className="text-lg font-semibold animate-pulse">Analyzing...</p>
             <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden max-w-xs mx-auto">
               <div className="bg-purple-600 h-full animate-[progress_2s_infinite]"></div>
             </div>

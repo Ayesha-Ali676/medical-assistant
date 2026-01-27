@@ -188,51 +188,6 @@
     ]
   },
   {
-    "patient_id": "P004",
-    "name": "Emily Rodriguez",
-    "age": 45,
-    "gender": "Female",
-    "chief_complaint": "Severe headache and nausea",
-    "vitals": {
-      "bp": "168/105",
-      "hr": "102",
-      "temp": "37.0",
-      "rr": "20",
-      "spo2": "98"
-    },
-    "lab_results": [
-      {
-        "test_name": "Glucose",
-        "value": 92,
-        "unit": "mg/dL",
-        "reference_range": "70-100",
-        "status": "Normal"
-      },
-      {
-        "test_name": "Sodium",
-        "value": 138,
-        "unit": "mEq/L",
-        "reference_range": "136-145",
-        "status": "Normal"
-      }
-    ],
-    "current_medications": [
-      {
-        "name": "Sertraline",
-        "dose": "50mg",
-        "frequency": "daily",
-        "route": "oral"
-      }
-    ],
-    "allergies": [
-      "Latex"
-    ],
-    "medical_history": [
-      "Migraine",
-      "Anxiety disorder"
-    ]
-  },
-  {
     "patient_id": "P005",
     "name": "Robert Williams",
     "age": 58,
@@ -288,24 +243,6 @@
       "Hyperlipidemia",
       "Obesity"
     ]
-  },
-  {
-    "patient_id": "P604",
-    "name": "Marwa",
-    "age": 20,
-    "gender": "Female",
-    "chief_complaint": "fever",
-    "vitals": {
-      "bp": "120/80",
-      "hr": "72",
-      "temp": "37.0",
-      "rr": "16",
-      "spo2": "98"
-    },
-    "lab_results": [],
-    "current_medications": [],
-    "allergies": [],
-    "medical_history": []
   },
   {
     "patient_id": "P436",
