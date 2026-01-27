@@ -250,8 +250,8 @@ const App = () => {
             </button>
           </nav>
           <div className="user-profile">
-            <span className="physician-name">Dr. Sarah Chen, MD</span>
-            <span className="department">Internal Medicine</span>
+            <span className="physician-name"></span>
+            <span className="department"></span>
           </div>
         </div>
       </header>

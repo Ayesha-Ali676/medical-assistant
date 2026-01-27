@@ -1,4 +1,5 @@
 import os
+# Updated CORS origins to support port 5174
 import json
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware

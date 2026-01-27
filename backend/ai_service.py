@@ -1,6 +1,6 @@
 import os
 import time
-import google.generativeai as genai
+from google import genai
 from models import AIHistorySummary, ScanResult
 from dotenv import load_dotenv
 from functools import wraps
@@ -14,15 +14,14 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY not found in environment variables")
 
-# Initialize Gemini (lazy - only when needed)
-genai.configure(api_key=GEMINI_API_KEY)
-_model = None
+# Initialize Client
+_client = None
 
-def get_model():
-    global _model
-    if _model is None:
-        _model = genai.GenerativeModel('gemini-2.0-flash')
-    return _model
+def get_client():
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=GEMINI_API_KEY)
+    return _client
 
 # Rate limiting configuration
 last_api_call_time = 0
@@ -107,9 +106,12 @@ Format your response as JSON with these exact keys:
     
     try:
         # Generate response from Gemini
-        model = get_model()
+        client = get_client()
         
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model='gemini-2.0-flash',
+            contents=prompt
+        )
         
         # Parse JSON response
         response_text = response.text.strip()
@@ -261,17 +263,20 @@ def analyze_medical_report(image_bytes: bytes) -> ScanResult:
     """
     
     try:
-        # Prepare image for Gemini
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Prepare client
+        client = get_client()
         
         # Analyze using bytes directly
-        response = model.generate_content([
-            prompt,
-            {
-                "mime_type": "image/jpeg",
-                "data": image_bytes
-            }
-        ])
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=[
+                prompt,
+                {
+                    "mime_type": "image/jpeg",
+                    "data": image_bytes
+                }
+            ]
+        )
 
         response_text = response.text.strip()
         
