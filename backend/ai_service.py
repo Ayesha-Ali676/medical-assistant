@@ -1,5 +1,6 @@
 import os
 import time
+import base64
 from google import genai
 from models import AIHistorySummary, ScanResult
 from dotenv import load_dotenv
@@ -109,7 +110,7 @@ Format your response as JSON with these exact keys:
         client = get_client()
         
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-2.5-flash',
             contents=prompt
         )
         
@@ -244,36 +245,45 @@ def analyze_medical_report(image_bytes: bytes) -> ScanResult:
     Analyze medical report image using Gemini Vision
     """
     prompt = """
-    You are an expert medical AI specializing in clinical document analysis.
-    Analyze this medical report image and provide:
-    1. A concise summary of the report.
-    2. Key clinical observations.
-    3. Any detected or suggested medical conditions.
-    4. A confidence score (0.0 to 1.0).
-    5. Boolean assessment if this is actually a valid medical report.
+You are an expert medical AI specializing in clinical document analysis.
+Analyze this medical report image and provide:
+1. A concise summary of the report.
+2. Key clinical observations.
+3. Any detected or suggested medical conditions.
+4. A confidence score (0.0 to 1.0).
+5. Boolean assessment if this is actually a valid medical report.
 
-    Format your response as JSON with these exact keys:
-    {
-      "summary": "...",
-      "key_observations": ["...", "..."],
-      "detected_conditions": ["...", "..."],
-      "confidence_score": 0.0-1.0,
-      "is_valid_medical_report": true/false
-    }
-    """
+Format your response as JSON with these exact keys:
+{
+  "summary": "...",
+  "key_observations": ["...", "..."],
+  "detected_conditions": ["...", "..."],
+  "confidence_score": 0.0-1.0,
+  "is_valid_medical_report": true/false
+}
+"""
     
     try:
+        # Convert bytes to base64
+        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+        
         # Prepare client
         client = get_client()
         
-        # Analyze using bytes directly
+        # Use the correct API format for image analysis
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.5-flash',
             contents=[
-                prompt,
                 {
-                    "mime_type": "image/jpeg",
-                    "data": image_bytes
+                    "parts": [
+                        {"text": prompt},
+                        {
+                            "inline_data": {
+                                "mime_type": "image/jpeg",
+                                "data": image_base64
+                            }
+                        }
+                    ]
                 }
             ]
         )
