@@ -1,7 +1,6 @@
 import os
 import time
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from models import AIHistorySummary, ScanResult
 from dotenv import load_dotenv
 from functools import wraps
@@ -15,8 +14,15 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY not found in environment variables")
 
-# Initialize the client
-client = genai.Client(api_key=GEMINI_API_KEY)
+# Initialize Gemini (lazy - only when needed)
+genai.configure(api_key=GEMINI_API_KEY)
+_model = None
+
+def get_model():
+    global _model
+    if _model is None:
+        _model = genai.GenerativeModel('gemini-2.0-flash')
+    return _model
 
 # Rate limiting configuration
 last_api_call_time = 0
@@ -85,6 +91,7 @@ Please provide:
 4. Urgency Score (0-10, where 10 is most urgent)
 5. Priority Level (Low/Moderate/High)
 6. Clinical Recommendations (3-5 actionable items for physician review)
+7. Diet Suggestions (2-4 personalized dietary recommendations based on condition)
 
 Format your response as JSON with these exact keys:
 {{
@@ -93,16 +100,16 @@ Format your response as JSON with these exact keys:
   "risk_assessment": {{"cardiac": "...", "respiratory": "...", "metabolic": "..."}},
   "urgency_score": 0-10,
   "priority_level": "Low/Moderate/High",
-  "recommendations": ["...", "..."]
+  "recommendations": ["...", "..."],
+  "diet_suggestions": ["...", "..."]
 }}
 """
     
     try:
         # Generate response from Gemini
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt
-        )
+        model = get_model()
+        
+        response = model.generate_content(prompt)
         
         # Parse JSON response
         response_text = response.text.strip()
@@ -126,6 +133,7 @@ Format your response as JSON with these exact keys:
             urgency_score=result.get("urgency_score", 5),
             priority_level=result.get("priority_level", "Moderate"),
             recommendations=result.get("recommendations", []),
+            diet_suggestions=result.get("diet_suggestions", []),
             disclaimer="For physician review only"
         )
         
@@ -154,6 +162,7 @@ Format your response as JSON with these exact keys:
                 "Review all lab results",
                 "Verify medication interactions"
             ],
+            diet_suggestions=[],
             disclaimer="For physician review only - AI response parsing failed"
         )
     except AttributeError as e:
@@ -179,6 +188,7 @@ Format your response as JSON with these exact keys:
                 "Review all lab results",
                 "Verify medication interactions"
             ],
+            diet_suggestions=[],
             disclaimer="For physician review only - AI response format error"
         )
     except Exception as e:
@@ -204,6 +214,7 @@ Format your response as JSON with these exact keys:
                 "Review all lab results",
                 "Verify medication interactions"
             ],
+            diet_suggestions=[],
             disclaimer="For physician review only - AI analysis unavailable"
         )
 
@@ -250,25 +261,17 @@ def analyze_medical_report(image_bytes: bytes) -> ScanResult:
     """
     
     try:
-        # Upload the image
-        uploaded_file = client.files.upload(file_data=image_bytes)
+        # Prepare image for Gemini
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
-        # Generate content with image
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=[
-                types.Content(
-                    role="user",
-                    parts=[
-                        types.Part.from_uri(
-                            file_uri=uploaded_file.uri,
-                            mime_type="image/jpeg"
-                        ),
-                        types.Part.from_text(text=prompt)
-                    ]
-                )
-            ]
-        )
+        # Analyze using bytes directly
+        response = model.generate_content([
+            prompt,
+            {
+                "mime_type": "image/jpeg",
+                "data": image_bytes
+            }
+        ])
 
         response_text = response.text.strip()
         

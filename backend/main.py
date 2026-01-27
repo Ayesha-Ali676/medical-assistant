@@ -8,7 +8,8 @@ import shutil
 from models import PatientRecord, AIHistorySummary, LabResult, ScanResult
 from ai_service import get_gemini_summary, analyze_medical_report
 from safety_engine import check_vital_safety, check_lab_safety, check_drug_interactions
-from ml_service import ml_service
+from clinical_rules_engine import ClinicalRulesEngine, RiskLevel
+from risk_assessment import ClinicalDecisionSupport, RiskScorer
 import traceback
 import logging
 
@@ -25,7 +26,9 @@ app = FastAPI(
 )
 
 # Configure CORS for React frontend
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174")
+allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",")]
+print(f"CORS Allowed Origins: {allowed_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -101,59 +104,53 @@ async def scan_report(file: UploadFile = File(...)):
 @app.post("/analyze-patient", response_model=dict)
 async def analyze_patient(record: dict):
     """
-    Analyze patient data using Gemini AI and safety checks
-    For physician review only
+    Analyze patient data using clinical rules engine and AI reasoning.
+    For physician review only - NOT for diagnostic use.
+    
+    This endpoint performs:
+    1. Real-time clinical risk assessment (deterministic rules)
+    2. Safety checks (vital signs, lab values)
+    3. AI-powered clinical reasoning and explanation
     """
     try:
-        # 1. Get AI Summary from Gemini
-        summary = get_gemini_summary(record)
+        # Step 1: Clinical Risk Assessment (Dataset-Free)
+        risk_assessment = ClinicalDecisionSupport.generate_assessment(record)
         
-        # 2. Run Rule-Based Safety Checks
+        if not risk_assessment.get("success"):
+            raise Exception(f"Risk assessment failed: {risk_assessment.get('error')}")
+        
+        assessment = risk_assessment["assessment"]
+        
+        # Step 2: Safety Checks
         vital_alerts = check_vital_safety(record.get('vitals', {}))
-        
-        # Lab results
         lab_results_list = record.get('lab_results', [])
         lab_alerts = check_lab_safety(lab_results_list)
-        
-        # Medications
         medications_list = record.get('current_medications', [])
         drug_alerts = check_drug_interactions(medications_list)
         
-        # 3. ML Risk Scoring
-        # Extract features for ML model (simplified)
-        vitals = record.get('vitals', {})
-        systolic = int(vitals.get("bp", "120/80").split('/')[0])
-        hr = int(vitals.get("hr", 72))
+        # Step 3: AI Reasoning (Explanation & Interpretation)
+        try:
+            ai_summary = get_gemini_summary(record)
+            summary_dict = ai_summary.dict() if hasattr(ai_summary, 'dict') else ai_summary
+        except Exception as e:
+            logger.warning(f"AI summary generation failed: {str(e)}")
+            summary_dict = {"clinical_narrative": "AI summary unavailable"}
         
-        # Safely get HbA1c value
-        hba1c = 5.5  # default
-        for lab in lab_results_list:
-            if lab.get("test_name", "").lower() == "hba1c":
-                hba1c = float(lab.get("value", 5.5))
-                break
-        
-        age = record.get('age', 50)
-        priority_score = ml_service.predict_priority(age, systolic, hr, hba1c)
-        
-        # Convert summary to dict if it's a Pydantic model
-        summary_dict = summary.dict() if hasattr(summary, 'dict') else summary
-        
+        # Step 4: Compile Response
         response_data = {
-            "summary": summary_dict,
-            "alerts": {
+            "clinical_assessment": assessment,
+            "safety_alerts": {
                 "vitals": vital_alerts,
                 "labs": lab_alerts,
                 "medications": drug_alerts
             },
-            "ml_risk": {
-                "priority_score": priority_score,
-                "label": ["Low", "Moderate", "High"][priority_score]
+            "ai_interpretation": summary_dict,
+            "workflow": {
+                "requires_immediate_attention": assessment.get("requires_immediate_attention", False),
+                "risk_level": assessment.get("level"),
+                "next_steps": assessment.get("recommendation")
             },
-            "ai_triage": {
-                "score": summary_dict.get("urgency_score", 5),
-                "level": summary_dict.get("priority_level", "Moderate")
-            },
-            "disclaimer": "For physician review only"
+            "disclaimer": "This is a decision support tool. All findings require physician validation. Not for diagnostic use."
         }
         
         return response_data
@@ -162,6 +159,31 @@ async def analyze_patient(record: dict):
         logger.error(f"ERROR in analyze_patient: {str(e)}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+
+
+@app.post("/clinical-assessment")
+async def clinical_assessment(patient_data: dict):
+    """
+    Dedicated endpoint for clinical risk assessment.
+    Dataset-free, real-time evaluation using clinical rules.
+    
+    Input:
+    {
+        "vitals": {"bp": "140/90", "hr": 88, "spo2": 97, "temp": 36.5},
+        "symptoms": ["headache", "fatigue"],
+        "age": 45,
+        "gender": "M",
+        "medical_history": ["hypertension"],
+        "medications": ["lisinopril 10mg"],
+        "allergies": []
+    }
+    """
+    try:
+        result = ClinicalDecisionSupport.generate_assessment(patient_data)
+        return result
+    except Exception as e:
+        logger.error(f"Clinical assessment failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Assessment failed: {str(e)}")
     
     
     

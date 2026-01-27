@@ -2,39 +2,122 @@
 
 A professional, hospital-grade clinical decision support system with **Gemini AI integration** and a doctor-friendly interface designed for real-world clinical workflows.
 
+**🎉 VERSION 2.0 - DATASET-FREE REAL-TIME ASSESSMENT**  
+Real-time clinical risk evaluation using deterministic rules + AI reasoning (NO ML training required)
+
 ## 🚨 Important Clinical Disclaimer
 
 **This system is for physician review only. It does not diagnose diseases, prescribe treatments, or replace clinical judgment. All outputs are assistive and require physician validation.**
 
 ---
 
-## ✨ What's New - Professional UI Redesign
+## ✨ What's New - Version 2.0: Dataset-Free Clinical Assessment
 
-Your MedAssist interface has been **completely redesigned** as a professional, hospital-grade clinical workstation:
+Your MedAssist has been upgraded to a **real-time, dataset-free clinical decision support system**:
 
-✅ **Color-Coded Priority System** - Instant triage awareness  
-✅ **AI Clinical Summaries** - Gemini-powered insights  
-✅ **Lab Alerts Panel** - Only shows abnormal values  
-✅ **Professional Design** - Calm, trust-building interface  
-✅ **Doctor-Friendly** - Reduces cognitive load  
+✅ **Clinical Rule Engine** - Deterministic rules (no ML models)  
+✅ **Real-Time Risk Scoring** - 0-100 scale with transparent factors  
+✅ **Deterministic Rules** - Fully explainable medical guidelines  
+✅ **AI Interpretation** - Gemini for clinical explanation  
+✅ **Safe Recommendations** - Non-diagnostic decision support  
+✅ **No Historical Datasets** - Uses only current patient input  
 
-**See**: [NEW_UI_GUIDE.md](NEW_UI_GUIDE.md) for complete UI documentation
+**See**: [ARCHITECTURE_DATASET_FREE.md](docs/ARCHITECTURE_DATASET_FREE.md) for complete details
 
 ---
 
-## 🚀 Quick Start (2 Steps)
+## 🚀 Quick Start (3 Steps)
 
-### 1. Start the Application
+### 1. Add Your Gemini API Key
+Edit `.env` file and add:
+```env
+GEMINI_API_KEY=your-key-here
+```
+Get free API key: https://makersuite.google.com/app/apikey
+
+### 2. Start the Application
 ```bash
 start.bat
 ```
 
-### 2. Open Your Browser
+### 3. Open Your Browser
 ```
 http://localhost:5173
 ```
 
-**That's it!** Your professional clinical workstation is ready.
+**That's it!** Your clinical workstation is ready.
+
+---
+
+## 🏗️ How It Works (New Architecture)
+
+## 🏗️ How It Works (New Architecture)
+
+### 5-Layer Clinical Decision Support
+
+```
+┌─────────────────────────────────────────┐
+│ 1. DATA INPUT (Real-Time Patient Data)  │
+│    - Vitals, symptoms, demographics     │
+│    - NO historical datasets             │
+└──────────────┬──────────────────────────┘
+               ▼
+┌─────────────────────────────────────────┐
+│ 2. CLINICAL RULES (Deterministic)       │
+│    - BP, SpO2, HR, symptoms, age        │
+│    - Transparent medical guidelines     │
+└──────────────┬──────────────────────────┘
+               ▼
+┌─────────────────────────────────────────┐
+│ 3. RISK SCORING (Logic-Based)           │
+│    - 0-100 scale with weights           │
+│    - Contribution breakdown             │
+└──────────────┬──────────────────────────┘
+               ▼
+┌─────────────────────────────────────────┐
+│ 4. AI REASONING (Gemini)                │
+│    - Explain risk factors               │
+│    - Generate clinical narrative        │
+└──────────────┬──────────────────────────┘
+               ▼
+┌─────────────────────────────────────────┐
+│ 5. OUTPUT (Safe & Ethical)              │
+│    - Risk level (0-100)                 │
+│    - Recommendation level               │
+│    - Physician review required          │
+└─────────────────────────────────────────┘
+```
+
+### Risk Levels
+
+- 🟢 **Low Risk (0-30)**: Continue routine monitoring
+- 🟡 **Moderate Risk (31-60)**: Schedule physician visit in 24-48h
+- 🔴 **High Risk (61-100)**: Seek immediate medical evaluation
+
+---
+
+## 📊 Example Assessment
+
+**Input**:
+```json
+{
+  "vitals": {"bp": "160/100", "hr": 95, "spo2": 95, "temp": 37.5},
+  "symptoms": ["headache", "fatigue"],
+  "age": 55,
+  "gender": "M",
+  "medical_history": ["hypertension"]
+}
+```
+
+**Output**:
+```json
+{
+  "score": 48,
+  "level": "🟡 Moderate Risk (31-60)",
+  "recommendation": "Schedule physician consultation within 24-48 hours",
+  "explanation": "Primary risk drivers: elevated BP and chronic conditions. Overall risk profile is moderate."
+}
+```
 
 ---
 

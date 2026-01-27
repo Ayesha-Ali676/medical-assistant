@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AlertTriangle, Activity, TrendingUp, TrendingDown, Minus, UserPlus, FileSearch, Home } from 'lucide-react';
+import { AlertTriangle, Activity, TrendingUp, TrendingDown, Minus, UserPlus, FileSearch, Home, Loader } from 'lucide-react';
 import PatientForm from './components/PatientForm';
 import ReportScanner from './components/ReportScanner';
 import './App.css';
@@ -8,14 +8,50 @@ import './App.css';
 const App = () => {
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
-  const [analysis, setAnalysis] = useState(null);
+  const [analysis, setAnalysis] = useState({
+    summary: {
+      clinical_narrative: '',
+      key_findings: [],
+      urgency_score: 0,
+      priority_level: 'NORMAL'
+    },
+    alerts: {
+      vitals: [],
+      labs: [],
+      medications: []
+    },
+    ml_risk: {
+      priority_score: 0,
+      risk_level: 'LOW'
+    }
+  });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'add-patient', 'scan-report'
+  const [backendStatus, setBackendStatus] = useState('checking');
+  const [backendError, setBackendError] = useState(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [analysisLoading, setAnalysisLoading] = useState(false);
 
   const api = axios.create({
-    baseURL: 'http://localhost:8000',
-    timeout: 5000, // 5 second timeout
+    baseURL: 'http://127.0.0.1:8000',
+    timeout: 30000, // 30 second timeout for analysis
   });
+
+  // Check backend health
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const response = await api.get('/health');
+        console.log('Backend healthy:', response.data);
+        setBackendStatus('connected');
+        setBackendError(null);
+      } catch (error) {
+        console.error('Backend error:', error.message);
+        setBackendStatus('error');
+        setBackendError(error.message);
+      }
+    };
+    checkBackend();
+  }, []);
 
   // Fetch patients from backend
   useEffect(() => {
@@ -26,8 +62,11 @@ const App = () => {
         console.log('Fetched patients:', response.data);
         const enhancedPatients = response.data.map(p => ({
           ...p,
+          id: p.patient_id,
           priority: calculatePriority(p),
-          alertCount: countAlerts(p)
+          priorityLevel: calculatePriority(p),
+          alertCount: countAlerts(p),
+          lastUpdated: new Date().toISOString()
         }));
         setPatients(enhancedPatients);
         if (enhancedPatients.length > 0) {
@@ -39,16 +78,21 @@ const App = () => {
         setLoading(false);
       }
     };
-    fetchPatients();
-  }, []);
+    if (backendStatus === 'connected') {
+      fetchPatients();
+    }
+  }, [backendStatus]);
 
   const refreshPatients = async () => {
     try {
       const response = await axios.get('http://127.0.0.1:8000/patients');
       const enhancedPatients = response.data.map(p => ({
         ...p,
+        id: p.patient_id,
         priority: calculatePriority(p),
-        alertCount: countAlerts(p)
+        priorityLevel: calculatePriority(p),
+        alertCount: countAlerts(p),
+        lastUpdated: new Date().toISOString()
       }));
       setPatients(enhancedPatients);
     } catch (error) {
@@ -56,12 +100,12 @@ const App = () => {
     }
   };
 
-  // Analyze patient when selected
+  // Analyze patient when selected (only once per patient)
   useEffect(() => {
-    if (selectedPatient) {
+    if (selectedPatient && selectedPatient.patient_id) {
       analyzePatient(selectedPatient);
     }
-  }, [selectedPatient]);
+  }, [selectedPatient?.patient_id]);
 
   const calculatePriority = (patient) => {
     const vitals = patient.vitals || {};
@@ -91,10 +135,22 @@ const App = () => {
     // Remove frontend-only fields before sending to backend
     const { priority, alertCount, ...patientData } = patient;
     
+    setAnalysisLoading(true);
     const response = await api.post('/analyze-patient', patientData);
-    setAnalysis(response.data);
+    const data = response.data;
+    console.log('Analysis result:', data);
+    
+    // Map backend response to frontend expected structure
+    setAnalysis({
+      summary: data.ai_interpretation || { clinical_narrative: 'AI analysis unavailable' },
+      alerts: data.safety_alerts || { vitals: [], labs: [], medications: [] },
+      ml_risk: {
+        priority_score: data.clinical_assessment?.score || 0,
+        risk_level: data.clinical_assessment?.level || 'LOW'
+      }
+    });
   } catch (error) {
-    console.error('Analysis failed:', error.message);
+    console.error('Analysis failed:', error);
     // Create mock analysis for demo
     setAnalysis({
       summary: {
@@ -113,6 +169,8 @@ const App = () => {
         label: 'High'
       }
     });
+  } finally {
+    setAnalysisLoading(false);
   }
 };
 
@@ -130,11 +188,32 @@ const App = () => {
     return <Minus className="w-4 h-4" />;
   };
 
-  if (loading) {
+  if (loading || backendStatus === 'checking') {
     return (
       <div className="loading-screen">
         <Activity className="loading-icon" />
         <p>Loading MedAssist Clinical Workstation...</p>
+        {backendStatus === 'checking' && <p style={{fontSize: '12px', marginTop: '10px', color: '#666'}}>Connecting to backend...</p>}
+      </div>
+    );
+  }
+
+  if (backendStatus === 'error') {
+    return (
+      <div className="loading-screen" style={{backgroundColor: '#fff3cd'}}>
+        <AlertTriangle className="loading-icon" style={{color: '#ff6b6b'}} />
+        <h2 style={{color: '#d32f2f', marginTop: '10px'}}>Backend Connection Error</h2>
+        <p style={{color: '#666', marginTop: '10px'}}>Cannot connect to backend API</p>
+        <p style={{color: '#999', fontSize: '12px', marginTop: '10px'}}>{backendError}</p>
+        <div style={{marginTop: '20px', fontSize: '12px', textAlign: 'left', backgroundColor: '#fff', padding: '15px', borderRadius: '5px', maxWidth: '400px'}}>
+          <p><strong>Troubleshooting:</strong></p>
+          <ol style={{margin: '10px 0', paddingLeft: '20px'}}>
+            <li>Make sure backend is running on port 8000</li>
+            <li>Check if .env file has GEMINI_API_KEY set</li>
+            <li>Try: cd backend && python -m uvicorn main:app --reload</li>
+            <li>Check browser console for more details (F12)</li>
+          </ol>
+        </div>
       </div>
     );
   }
@@ -239,18 +318,36 @@ const App = () => {
               </div>
 
               {/* AI Clinical Summary */}
-              {analysis && (
+              {analysisLoading ? (
+                <div className="ai-summary-box" style={{ opacity: 0.7 }}>
+                  <div className="ai-label">AI CLINICAL SUMMARY</div>
+                  <div className="flex items-center gap-3">
+                    <Loader className="animate-spin w-5 h-5 text-blue-500" />
+                    <p className="ai-narrative">Gemini is analyzing patient data...</p>
+                  </div>
+                </div>
+              ) : analysis && analysis.summary ? (
                 <div className="ai-summary-box">
                   <div className="ai-label">AI CLINICAL SUMMARY</div>
-                  <p className="ai-narrative">{analysis.summary.clinical_narrative}</p>
+                  <p className="ai-narrative">{analysis.summary.clinical_narrative || 'Clinical analysis pending...'}</p>
+                  {analysis.summary.key_findings && analysis.summary.key_findings.length > 0 && (
+                    <div className="key-findings-list">
+                      <strong>Key Findings:</strong>
+                      <ul>
+                        {analysis.summary.key_findings.map((finding, idx) => (
+                          <li key={idx}>{finding}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <div className="ai-meta">
                     <span>Confidence: High</span>
                     <span>•</span>
-                    <span>Urgency Score: {analysis.summary.urgency_score}/10</span>
+                    <span>Urgency Score: {analysis.summary.urgency_score || 5}/10</span>
                   </div>
                   <div className="disclaimer">For physician review only — Not for diagnostic use</div>
                 </div>
-              )}
+              ) : null}
 
               {/* Vitals Grid */}
               <div className="section-card">
@@ -258,34 +355,34 @@ const App = () => {
                 <div className="vitals-grid">
                   <div className="vital-item">
                     <span className="vital-label">Blood Pressure</span>
-                    <span className="vital-value vital-abnormal">{selectedPatient.vitals?.bp}</span>
+                    <span className="vital-value vital-abnormal">{selectedPatient.vitals?.bp || 'N/A'}</span>
                     <span className="vital-unit">mmHg</span>
                   </div>
                   <div className="vital-item">
                     <span className="vital-label">Heart Rate</span>
-                    <span className="vital-value">{selectedPatient.vitals?.hr}</span>
+                    <span className="vital-value">{selectedPatient.vitals?.hr || 'N/A'}</span>
                     <span className="vital-unit">bpm</span>
                   </div>
                   <div className="vital-item">
                     <span className="vital-label">Temperature</span>
-                    <span className="vital-value">{selectedPatient.vitals?.temp}</span>
+                    <span className="vital-value">{selectedPatient.vitals?.temp || 'N/A'}</span>
                     <span className="vital-unit">°C</span>
                   </div>
                   <div className="vital-item">
                     <span className="vital-label">SpO₂</span>
-                    <span className="vital-value">{selectedPatient.vitals?.spo2}</span>
+                    <span className="vital-value">{selectedPatient.vitals?.spo2 || 'N/A'}</span>
                     <span className="vital-unit">%</span>
                   </div>
                   <div className="vital-item">
                     <span className="vital-label">Resp Rate</span>
-                    <span className="vital-value">{selectedPatient.vitals?.rr}</span>
+                    <span className="vital-value">{selectedPatient.vitals?.rr || 'N/A'}</span>
                     <span className="vital-unit">/min</span>
                   </div>
                 </div>
               </div>
 
               {/* Medical History */}
-              {selectedPatient.medical_history && selectedPatient.medical_history.length > 0 && (
+              {selectedPatient.medical_history && Array.isArray(selectedPatient.medical_history) && selectedPatient.medical_history.length > 0 && (
                 <div className="section-card">
                   <h3 className="section-title">Medical History</h3>
                   <div className="history-list">
@@ -297,14 +394,14 @@ const App = () => {
               )}
 
               {/* Current Medications */}
-              {selectedPatient.current_medications && selectedPatient.current_medications.length > 0 && (
+              {selectedPatient.current_medications && Array.isArray(selectedPatient.current_medications) && selectedPatient.current_medications.length > 0 && (
                 <div className="section-card">
                   <h3 className="section-title">Current Medications</h3>
                   <div className="medication-list">
                     {selectedPatient.current_medications.map((med, idx) => (
                       <div key={idx} className="medication-item">
-                        <div className="medication-name">{med.name}</div>
-                        <div className="medication-dose">{med.dose} — {med.frequency}</div>
+                        <div className="medication-name">{med.name || 'Unknown'}</div>
+                        <div className="medication-dose">{med.dose || 'N/A'} — {med.frequency || 'N/A'}</div>
                       </div>
                     ))}
                   </div>
@@ -312,7 +409,7 @@ const App = () => {
               )}
 
               {/* Allergies */}
-              {selectedPatient.allergies && selectedPatient.allergies.length > 0 && (
+              {selectedPatient.allergies && Array.isArray(selectedPatient.allergies) && selectedPatient.allergies.length > 0 && (
                 <div className="alert-box alert-warning">
                   <AlertTriangle className="w-5 h-5" />
                   <div>
@@ -331,25 +428,25 @@ const App = () => {
             <h2>Lab Alerts</h2>
           </div>
 
-          {selectedPatient && selectedPatient.lab_results && (
+          {selectedPatient && selectedPatient.lab_results && Array.isArray(selectedPatient.lab_results) && (
             <div className="lab-alerts-list">
               {selectedPatient.lab_results
-                .filter(lab => lab.status !== 'Normal')
+                .filter(lab => lab && lab.status !== 'Normal')
                 .map((lab, idx) => (
                   <div key={idx} className={`lab-alert-card ${lab.status === 'Critical' ? 'critical' : 'high'}`}>
                     <div className="lab-alert-header">
-                      <span className="lab-name">{lab.test_name}</span>
+                      <span className="lab-name">{lab.test_name || 'Unknown Test'}</span>
                       {getTrendIcon(lab.status)}
                     </div>
-                    <div className="lab-value-large">{lab.value} <span className="lab-unit">{lab.unit}</span></div>
-                    <div className="lab-reference">Ref: {lab.reference_range}</div>
+                    <div className="lab-value-large">{lab.value || 'N/A'} <span className="lab-unit">{lab.unit || ''}</span></div>
+                    <div className="lab-reference">Ref: {lab.reference_range || 'N/A'}</div>
                     <div className={`lab-status-badge ${lab.status === 'Critical' ? 'critical' : 'high'}`}>
                       {lab.status}
                     </div>
                   </div>
                 ))}
 
-              {selectedPatient.lab_results.filter(lab => lab.status !== 'Normal').length === 0 && (
+              {selectedPatient.lab_results && selectedPatient.lab_results.filter(lab => lab && lab.status !== 'Normal').length === 0 && (
                 <div className="no-alerts">
                   <p>No abnormal lab values</p>
                 </div>
@@ -358,14 +455,36 @@ const App = () => {
           )}
 
           {/* Clinical Suggestions */}
-          {analysis && (
+          {analysis && analysis.summary && (
             <div className="suggestions-box">
               <h3 className="suggestions-title">Clinical Considerations</h3>
               <ul className="suggestions-list">
-                <li>Review diabetes management protocol</li>
-                <li>Consider BP medication adjustment</li>
-                <li>Monitor renal function closely</li>
+                {analysis.summary.recommendations && analysis.summary.recommendations.length > 0 ? (
+                  analysis.summary.recommendations.map((rec, idx) => (
+                    <li key={idx}>{rec}</li>
+                  ))
+                ) : (
+                  <>
+                    <li>Review clinical guidelines</li>
+                    <li>Monitor vitals regularly</li>
+                    <li>Verify medication interactions</li>
+                  </>
+                )}
               </ul>
+              
+              {analysis.summary.diet_suggestions && analysis.summary.diet_suggestions.length > 0 && (
+                <div style={{ marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '12px' }}>
+                  <h3 className="suggestions-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Activity className="w-4 h-4" /> Dietary Suggestions
+                  </h3>
+                  <ul className="suggestions-list">
+                    {analysis.summary.diet_suggestions.map((diet, idx) => (
+                      <li key={idx}>{diet}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
               <div className="suggestions-disclaimer">Clinical Support — Not Diagnosis</div>
             </div>
           )}

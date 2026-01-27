@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Sparkles } from 'lucide-react';
 import axios from 'axios';
-
+import './report.css'
 const ReportScanner = () => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);

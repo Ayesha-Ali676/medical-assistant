@@ -1,0 +1,233 @@
+/* ================================
+   VARIABLES
+================================ */
+:root {
+  --primary: #0f766e;
+  --primary-soft: #e6f5f3;
+  --bg-card: #ffffff;
+  --bg-main: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-soft: #e5e7eb;
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --error-bg: #fee2e2;
+  --error-color: #dc2626;
+  --success-bg: #dcfce7;
+  --success-color: #16a34a;
+}
+
+/* ================================
+   BASE STYLING
+================================ */
+body, input, select, textarea, button {
+  font-family: "Inter", sans-serif;
+  color: var(--text-main);
+}
+
+.section-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow-soft);
+  margin: 16px auto;
+  max-width: 1200px;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h2, h3 {
+  color: var(--primary);
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.125rem;
+}
+
+label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+  color: var(--text-main);
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: #ffffff;
+  transition: all 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* ================================
+   FORM SECTIONS
+================================ */
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ================================
+   BUTTONS
+================================ */
+button {
+  cursor: pointer;
+  font-weight: 600;
+  border: none;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+button.bg-blue-600 {
+  background-color: #0f766e;
+  color: white;
+}
+
+button.bg-blue-600:hover {
+  background-color: #0d9488;
+}
+
+button.bg-green-600 {
+  background-color: #16a34a;
+  color: white;
+}
+
+button.bg-green-600:hover {
+  background-color: #15803d;
+}
+
+button.border {
+  border: 1px solid var(--border-soft);
+  background: white;
+}
+
+button.transition-colors {
+  transition: all 0.2s ease-in-out;
+}
+
+/* ================================
+   LAB & MEDICATION ITEMS
+================================ */
+.p-3 {
+  padding: 12px;
+}
+
+.bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+.rounded-lg {
+  border-radius: 12px;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.gap-3 {
+  gap: 12px;
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+.mb-3 {
+  margin-bottom: 12px;
+}
+
+.mb-4 {
+  margin-bottom: 16px;
+}
+
+.mb-6 {
+  margin-bottom: 24px;
+}
+
+/* ================================
+   ERROR / ALERT
+================================ */
+.p-3.bg-red-50 {
+  background: var(--error-bg);
+  color: var(--error-color);
+}
+
+/* ================================
+   STICKY FOOTER BUTTONS
+================================ */
+form > div.flex.justify-end {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-card);
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* ================================
+   ICONS
+================================ */
+.w-5 { width: 20px; height: 20px; }
+.h-5 { width: 20px; height: 20px; }
+
+/* ================================
+   ANIMATION
+================================ */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

@@ -1,0 +1,112 @@
+/* ==============================
+   Professional Icon Styling
+   (Lucide / SVG Icons)
+============================== */
+
+/* Base icon appearance */
+svg {
+  stroke-width: 1.8;
+  transition: all 0.25s ease;
+  vertical-align: middle;
+}
+
+/* Header icons */
+.section-card h2 svg,
+.section-card h3 svg {
+  width: 22px;
+  height: 22px;
+  color: #4f46e5; /* professional indigo */
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08));
+}
+
+/* Upload / feature icons */
+.upload-zone svg {
+  width: 52px;
+  height: 52px;
+  color: #6b7280;
+  background: linear-gradient(145deg, #f9fafb, #eef2ff);
+  padding: 14px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  box-shadow:
+    0 6px 18px rgba(79, 70, 229, 0.15),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.upload-zone:hover svg {
+  color: #4338ca;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 10px 25px rgba(79, 70, 229, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+/* Action button icons */
+button svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+/* Status icons */
+.text-green-500,
+.text-red-600,
+.text-purple-600 {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+}
+
+/* Success icon */
+svg.text-green-500 {
+  color: #16a34a;
+}
+
+/* Error / alert icon */
+svg.text-red-600,
+svg.text-red-500 {
+  color: #dc2626;
+}
+
+/* Loader icon */
+svg.animate-spin {
+  color: #7c3aed;
+  filter: drop-shadow(0 0 6px rgba(124, 58, 237, 0.4));
+}
+
+/* Result section icons */
+.section-card .text-purple-600 svg,
+.section-card svg.text-purple-600 {
+  color: #6d28d9;
+}
+
+/* Observation list icons */
+ul svg {
+  min-width: 16px;
+  min-height: 16px;
+  margin-top: 2px;
+}
+
+/* Badge-style icon containers (if wrapped later) */
+.icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #eef2ff, #fafafa);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Subtle icon hover feedback */
+button:hover svg,
+.section-card:hover h2 svg {
+  transform: scale(1.08);
+}
+
+/* Accessibility: reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  svg {
+    transition: none;
+    transform: none !important;
+  }
+}

@@ -33,6 +33,7 @@ class AIHistorySummary(BaseModel):
     urgency_score: int
     priority_level: str
     recommendations: List[str]
+    diet_suggestions: List[str] = []
     disclaimer: str = "For physician review only"
 
 class ScanResult(BaseModel):
