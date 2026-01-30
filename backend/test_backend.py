@@ -2,6 +2,7 @@
 """Simple backend test to verify imports work"""
 import os
 import sys
+from pathlib import Path
 
 print("1. Testing environment...")
 print(f"   Python version: {sys.version}")
@@ -9,7 +10,8 @@ print(f"   Working dir: {os.getcwd()}")
 
 print("2. Testing dotenv...")
 from dotenv import load_dotenv
-load_dotenv()
+backend_dir = Path(__file__).parent
+load_dotenv(backend_dir / ".env")
 print("   ✓ dotenv OK")
 
 print("3. Testing FastAPI...")

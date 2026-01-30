@@ -285,34 +285,5 @@
       "sleep_hours": "7",
       "diet_quality": "Good"
     }
-  },
-  {
-    "patient_id": "P028",
-    "name": "ayesha",
-    "age": 12,
-    "gender": "Female",
-    "chief_complaint": "asthma",
-    "vitals": {
-      "bp": "120/80",
-      "hr": "72",
-      "temp": "37.0",
-      "rr": "16",
-      "spo2": "98",
-      "bmi": ""
-    },
-    "lab_results": [],
-    "current_medications": [],
-    "allergies": [
-      "latex"
-    ],
-    "medical_history": [
-      "asthma"
-    ],
-    "lifestyle": {
-      "smoking": "Former",
-      "activity_level": "Vigorous",
-      "sleep_hours": "7",
-      "diet_quality": "Fair"
-    }
   }
 ]

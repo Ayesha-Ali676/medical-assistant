@@ -1,34 +1,29 @@
+# Environment Variables
 .env
-backend/.env
-.env.example
+.env.local
+.env.*.local
 
-# Dependencies
-node_modules/
-frontend/node_modules/
-backend/venv/
-venv/
-.venv/
-env/
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+venv/
 *.log
+*.db
 
-# Build outputs
+# Node
+node_modules/
 dist/
 build/
-.next/
-out/
+.DS_Store
 
-# IDE files
+# IDE
 .vscode/
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.swp
+*.swo
 
-# OS files
-.DS_Store
-Thumbs.db
+# Logs
+*.log
+ai_debug.log
+endpoint_hits.log

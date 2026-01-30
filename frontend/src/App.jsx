@@ -3,6 +3,8 @@ import axios from 'axios';
 import { AlertTriangle, Activity, TrendingUp, TrendingDown, Minus, UserPlus, FileSearch, Home, Loader, Trash2 } from 'lucide-react';
 import PatientForm from './components/PatientForm';
 import ReportScanner from './components/ReportScanner';
+import EmergencyDashboard from './components/EmergencyDashboard';
+import DoctorDashboard from './components/DoctorDashboard';
 import './App.css';
 
 const App = () => {
@@ -113,7 +115,7 @@ const App = () => {
 
   const refreshPatients = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/patients');
+      const response = await api.get('/patients');
       const enhancedPatients = response.data.map(p => ({
         ...p,
         id: p.patient_id,
@@ -124,7 +126,7 @@ const App = () => {
       }));
       setPatients(enhancedPatients);
     } catch (error) {
-      console.error('Failed to refresh patients:', error);
+      console.error('Failed to refresh patients:', error.message);
     }
   };
 
@@ -265,10 +267,24 @@ const App = () => {
               <Home className="w-4 h-4" /> Dashboard
             </button>
             <button 
+              className={`nav-item ${activeTab === 'emergency' ? 'active' : ''}`}
+              onClick={() => setActiveTab('emergency')}
+              style={{ color: '#dc2626', fontWeight: 'bold' }}
+            >
+              <AlertTriangle className="w-4 h-4" /> 🚨 Emergency Alert
+            </button>
+            <button 
               className={`nav-item ${activeTab === 'add-patient' ? 'active' : ''}`}
               onClick={() => setActiveTab('add-patient')}
             >
               <UserPlus className="w-4 h-4" /> Add Patient
+            </button>
+            <button 
+              className={`nav-item ${activeTab === 'doctor' ? 'active' : ''}`}
+              onClick={() => setActiveTab('doctor')}
+              style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: 'white', fontWeight: '600' }}
+            >
+              👨‍⚕️ Doctor Tools
             </button>
             <button 
               className={`nav-item ${activeTab === 'scan-report' ? 'active' : ''}`}
@@ -543,6 +559,19 @@ const App = () => {
               )}
             </aside>
           </>
+        ) : activeTab === 'emergency' ? (
+          <div className="full-width-panel">
+            <EmergencyDashboard 
+              patient={selectedPatient}
+              onSOSTriggered={(alertData) => {
+                console.log('SOS Triggered:', alertData);
+              }}
+            />
+          </div>
+        ) : activeTab === 'doctor' ? (
+          <div className="full-width-panel">
+            <DoctorDashboard patient={selectedPatient} />
+          </div>
         ) : activeTab === 'add-patient' ? (
           <div className="full-width-panel">
             <PatientForm 
