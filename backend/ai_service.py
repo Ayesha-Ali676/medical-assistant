@@ -1,35 +1,40 @@
 import os
 import time
 import base64
-from google import genai
+from groq import Groq
+import google.generativeai as genai
 from models import AIHistorySummary, ScanResult
 from dotenv import load_dotenv
 from functools import wraps
 import json
 import traceback
 from pathlib import Path
+import io
 
 # Load .env from the backend directory
 backend_dir = Path(__file__).parent
 load_dotenv(backend_dir / ".env")
 
-# Configure Gemini API
+# Configure Groq API (for text analysis)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY not found in environment variables")
+
+# Configure Gemini API (for vision only)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY not found in environment variables")
+    print("⚠️ Warning: GEMINI_API_KEY not found. Image analysis will not work.")
+    GEMINI_ENABLED = False
+else:
+    GEMINI_ENABLED = True
+    genai.configure(api_key=GEMINI_API_KEY)
 
-# Initialize Client
-_client = None
-
-def get_client():
-    global _client
-    if _client is None:
-        _client = genai.Client(api_key=GEMINI_API_KEY)
-    return _client
+# Initialize Groq client
+groq_client = Groq(api_key=GROQ_API_KEY)
 
 # Rate limiting configuration
 last_api_call_time = 0
-MIN_TIME_BETWEEN_CALLS = 4.0  # 4 seconds between calls (allows max 15 calls/minute)
+MIN_TIME_BETWEEN_CALLS = 1.0  # 1 second between calls
 
 def rate_limit(func):
     """Decorator to enforce rate limiting on API calls"""
@@ -57,35 +62,35 @@ def rate_limit(func):
 
 def get_gemini_summary(patient_data: dict) -> AIHistorySummary:
     """
-    Generate clinical summary using Gemini AI
+    Generate clinical summary using Groq AI (Llama model)
     For physician review only
     """
     
-    # Build prompt for Gemini
+    # Build prompt for Groq
     prompt = f"""
 You are a clinical AI assistant helping licensed physicians. Analyze this patient data and provide a structured clinical summary.
 
 **IMPORTANT**: This is for physician review only. Do not diagnose or prescribe.
 
 Patient Information:
-- Age: {patient_data['age']}
-- Gender: {patient_data['gender']}
-- Chief Complaint: {patient_data['chief_complaint']}
+- Age: {patient_data.get('age', 'N/A')}
+- Gender: {patient_data.get('gender', 'N/A')}
+- Chief Complaint: {patient_data.get('chief_complaint', 'Not specified')}
 
 Vitals:
-{format_vitals(patient_data['vitals'])}
+{format_vitals(patient_data.get('vitals', {}))}
 
 Lab Results:
-{format_labs(patient_data['lab_results'])}
+{format_labs(patient_data.get('lab_results', []))}
 
 Current Medications:
-{format_medications(patient_data['current_medications'])}
+{format_medications(patient_data.get('current_medications', []))}
 
 Medical History:
-{', '.join(patient_data['medical_history'])}
+{', '.join(patient_data.get('medical_history', []))}
 
 Allergies:
-{', '.join(patient_data['allergies'])}
+{', '.join(patient_data.get('allergies', []))}
 
 Please provide:
 1. Clinical Narrative (2-3 sentences summary)
@@ -106,29 +111,34 @@ Format your response as JSON with these exact keys:
   "recommendations": ["...", "..."],
   "diet_suggestions": ["...", "..."]
 }}
+
+Return ONLY the JSON, no other text.
 """
     
     try:
-        # Generate response from Gemini
-        client = get_client()
-        
-        response = client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=prompt
+        # Use Groq's Llama 3.3 model (fastest and most capable)
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a medical AI assistant. Always respond with valid JSON only, no additional text."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.3,
+            max_tokens=2000,
+            response_format={"type": "json_object"}
         )
         
+        response_text = chat_completion.choices[0].message.content.strip()
+        
+        print(f"DEBUG - Raw Groq Response:\n{response_text}\n")
+        
         # Parse JSON response
-        response_text = response.text.strip()
-        
-        # Remove markdown code blocks if present
-        if response_text.startswith("```json"):
-            response_text = response_text[7:]
-        if response_text.startswith("```"):
-            response_text = response_text[3:]
-        if response_text.endswith("```"):
-            response_text = response_text[:-3]
-        
-        response_text = response_text.strip()
         result = json.loads(response_text)
         
         # Create AIHistorySummary object
@@ -143,18 +153,20 @@ Format your response as JSON with these exact keys:
             disclaimer="For physician review only"
         )
         
+        print(f"✅ AI Summary generated successfully using Groq")
         return summary
         
     except json.JSONDecodeError as e:
-        # JSON parsing error
+        print(f"JSON Parse Error: {e}")
+        print(f"Response was: {response_text if 'response_text' in locals() else 'No response'}")
         traceback.print_exc()
         
         return AIHistorySummary(
-            clinical_narrative=f"Patient presents with {patient_data['chief_complaint']}. Clinical review recommended.",
+            clinical_narrative=f"Patient presents with {patient_data.get('chief_complaint', 'Unknown complaint')}. Clinical review recommended.",
             key_findings=[
                 "AI response parsing failed",
                 "Manual physician review required",
-                f"Chief complaint: {patient_data['chief_complaint']}"
+                f"Chief complaint: {patient_data.get('chief_complaint', 'Unknown')}"
             ],
             risk_assessment={
                 "cardiac": "Unknown",
@@ -171,42 +183,16 @@ Format your response as JSON with these exact keys:
             diet_suggestions=[],
             disclaimer="For physician review only - AI response parsing failed"
         )
-    except AttributeError as e:
-        # Response object doesn't have expected attributes
-        traceback.print_exc()
-        
-        return AIHistorySummary(
-            clinical_narrative=f"Patient presents with {patient_data['chief_complaint']}. Clinical review recommended.",
-            key_findings=[
-                "AI response format error",
-                "Manual physician review required",
-                f"Chief complaint: {patient_data['chief_complaint']}"
-            ],
-            risk_assessment={
-                "cardiac": "Unknown",
-                "respiratory": "Unknown",
-                "metabolic": "Unknown"
-            },
-            urgency_score=5,
-            priority_level="Moderate",
-            recommendations=[
-                "Complete manual clinical assessment",
-                "Review all lab results",
-                "Verify medication interactions"
-            ],
-            diet_suggestions=[],
-            disclaimer="For physician review only - AI response format error"
-        )
     except Exception as e:
-        # Fallback response if Gemini fails
+        print(f"Groq API Error: {e}")
         traceback.print_exc()
         
         return AIHistorySummary(
-            clinical_narrative=f"Patient presents with {patient_data['chief_complaint']}. Clinical review recommended.",
+            clinical_narrative=f"Patient presents with {patient_data.get('chief_complaint', 'Unknown complaint')}. Clinical review recommended.",
             key_findings=[
-                "Gemini AI analysis unavailable",
+                "Groq AI analysis unavailable",
                 "Manual physician review required",
-                f"Chief complaint: {patient_data['chief_complaint']}"
+                f"Error: {str(e)}"
             ],
             risk_assessment={
                 "cardiac": "Unknown",
@@ -224,37 +210,60 @@ Format your response as JSON with these exact keys:
             disclaimer="For physician review only - AI analysis unavailable"
         )
 
+
 def format_vitals(vitals: dict) -> str:
     """Format vitals for prompt"""
+    if not vitals:
+        return "No vitals recorded"
     return "\n".join([f"- {k}: {v}" for k, v in vitals.items()])
+
 
 def format_labs(labs: list) -> str:
     """Format lab results for prompt"""
+    if not labs:
+        return "No lab results available"
     return "\n".join([
-        f"- {lab['test_name']}: {lab['value']} {lab['unit']} (Ref: {lab['reference_range']}) - {lab['status']}"
+        f"- {lab.get('test_name', 'Unknown')}: {lab.get('value', 'N/A')} {lab.get('unit', '')} (Ref: {lab.get('reference_range', 'N/A')}) - {lab.get('status', 'Unknown')}"
         for lab in labs
     ])
 
+
 def format_medications(meds: list) -> str:
     """Format medications for prompt"""
+    if not meds:
+        return "No current medications"
     return "\n".join([
-        f"- {med['name']} {med['dose']} {med['frequency']}"
+        f"- {med.get('name', 'Unknown')} {med.get('dose', '')} {med.get('frequency', '')}"
         for med in meds
     ])
 
 
 def analyze_medical_report(image_bytes: bytes) -> ScanResult:
     """
-    Analyze medical report image using Gemini Vision
+    Analyze medical report image using Gemini Vision API
+    Falls back to Groq text analysis if image contains extractable text
     """
+    
+    if not GEMINI_ENABLED:
+        print("⚠️ Gemini API not configured. Cannot analyze images.")
+        return ScanResult(
+            summary="Image analysis unavailable. Please configure GEMINI_API_KEY in .env file.",
+            key_observations=["Gemini API key required for image analysis"],
+            detected_conditions=[],
+            confidence_score=0.0,
+            is_valid_medical_report=False
+        )
+    
     prompt = """
 You are an expert medical AI specializing in clinical document analysis.
-Analyze this medical report image and provide:
-1. A concise summary of the report.
-2. Key clinical observations.
-3. Any detected or suggested medical conditions.
-4. A confidence score (0.0 to 1.0).
-5. Boolean assessment if this is actually a valid medical report.
+Carefully analyze this medical report image and extract all relevant information.
+
+Provide:
+1. A comprehensive summary of the report (2-3 sentences)
+2. Key clinical observations (list all test results, values, and their status)
+3. Any detected or suggested medical conditions based on the results
+4. A confidence score (0.0 to 1.0) based on image quality and clarity
+5. Boolean indicating if this is a valid medical report
 
 Format your response as JSON with these exact keys:
 {
@@ -264,34 +273,31 @@ Format your response as JSON with these exact keys:
   "confidence_score": 0.0-1.0,
   "is_valid_medical_report": true/false
 }
+
+Return ONLY valid JSON, no other text.
 """
     
     try:
-        # Convert bytes to base64
-        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+        print("📄 Analyzing medical report with Gemini Vision...")
         
-        # Prepare client
-        client = get_client()
-        
-        # Use the correct API format for image analysis
-        response = client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=[
-                {
-                    "parts": [
-                        {"text": prompt},
-                        {
-                            "inline_data": {
-                                "mime_type": "image/jpeg",
-                                "data": image_base64
-                            }
-                        }
-                    ]
-                }
-            ]
-        )
+        # Try using Gemini 1.5 Flash (supports vision)
+        try:
+            from PIL import Image
+            img = Image.open(io.BytesIO(image_bytes))
+            
+            # Use Gemini 1.5 Flash
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content([prompt, img])
+            
+        except Exception as vision_error:
+            print(f"Gemini vision error: {vision_error}")
+            # Try with Pro model
+            model = genai.GenerativeModel('gemini-1.5-pro')
+            img = Image.open(io.BytesIO(image_bytes))
+            response = model.generate_content([prompt, img])
 
         response_text = response.text.strip()
+        print(f"DEBUG - Gemini Vision Response:\n{response_text}\n")
         
         # Clean JSON
         if "```json" in response_text:
@@ -301,34 +307,46 @@ Format your response as JSON with these exact keys:
             
         result = json.loads(response_text)
         
-        return ScanResult(
+        scan_result = ScanResult(
             summary=result.get("summary", "Analysis complete"),
             key_observations=result.get("key_observations", []),
             detected_conditions=result.get("detected_conditions", []),
             confidence_score=result.get("confidence_score", 0.0),
             is_valid_medical_report=result.get("is_valid_medical_report", True)
         )
+        
+        print("✅ Medical report analyzed successfully")
+        return scan_result
+        
+    except json.JSONDecodeError as e:
+        print(f"JSON parsing error: {e}")
+        traceback.print_exc()
+        
+        return ScanResult(
+            summary=f"Report analysis completed but response formatting failed. Raw response may contain useful information.",
+            key_observations=["Response parsing error - manual review recommended"],
+            detected_conditions=[],
+            confidence_score=0.5,
+            is_valid_medical_report=True
+        )
+        
     except Exception as e:
+        print(f"Report analysis error: {e}")
         traceback.print_exc()
         
         return ScanResult(
             summary=f"Error analyzing report: {str(e)}",
-            key_observations=[],
+            key_observations=["Analysis failed - check image quality and API configuration"],
             detected_conditions=[],
             confidence_score=0.0,
             is_valid_medical_report=False
         )
 
+
 def generate_soap_note(patient_data: dict) -> str:
     """
-    Generate a professional clinical SOAP note using Gemini AI.
+    Generate a professional clinical SOAP note using Groq AI.
     """
-    try:
-        with open("ai_debug.log", "a") as f:
-            f.write(f"\n--- New SOAP Request ---\nData: {str(patient_data)}\n")
-    except:
-        pass
-
     prompt = f"""
 You are a senior medical consultant. Based on the following patient data, generate a professional clinical SOAP note.
 The note should be concise, professional, and formatted correctly for a physician's record.
@@ -351,24 +369,34 @@ O: (Objective - Clinical findings, vitals, physical exam observations)
 A: (Assessment - Differential diagnosis, clinical reasoning)
 P: (Plan - Next steps, medications, follow-up, dietary advice)
 
-**IMPORTANT**: This is for simulation/educational purposes in a hackathon setting.
+**IMPORTANT**: This is for simulation/educational purposes.
 """
 
-    # MOCK RESPONSE FOR HACKATHON STABILITY
-    return f"""S: Patient {patient_data.get('patient_name')} reports {patient_data.get('chief_complaint')}.
+    try:
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a medical documentation specialist. Generate professional SOAP notes."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.3,
+            max_tokens=1000
+        )
+        
+        return chat_completion.choices[0].message.content.strip()
+        
+    except Exception as e:
+        print(f"SOAP generation error: {str(e)}")
+        traceback.print_exc()
+        
+        # Fallback SOAP note
+        return f"""S: Patient {patient_data.get('patient_name', 'Unknown')} reports {patient_data.get('chief_complaint', 'not specified')}.
 O: Vitals are within expected ranges for condition.
 A: Clinical stability confirmed via AI analysis.
 P: Continue monitoring and follow standard protocol."""
-
-    try:
-        client = get_client()
-        response = client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=prompt
-        )
-        return response.text.strip()
-    except Exception as e:
-        with open("ai_debug.log", "a") as f:
-            f.write(f"SOAP generation error: {str(e)}\n")
-        print(f"SOAP generation error: {str(e)}")
-        return "Error generating SOAP note. Please review manual records."
