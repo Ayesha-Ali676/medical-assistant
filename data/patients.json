@@ -285,5 +285,48 @@
       "sleep_hours": "7",
       "diet_quality": "Good"
     }
+  },
+  {
+    "patient_id": "P588",
+    "name": "Ayesha Ali",
+    "age": 20,
+    "gender": "Female",
+    "chief_complaint": "high fever and shortage of breath",
+    "vitals": {
+      "bp": "120/80",
+      "hr": "72",
+      "temp": "37.0",
+      "rr": "16",
+      "spo2": "98",
+      "bmi": ""
+    },
+    "lab_results": [
+      {
+        "test_name": "kidney ",
+        "value": "20",
+        "unit": "2",
+        "reference_range": "normal",
+        "status": "Normal"
+      }
+    ],
+    "current_medications": [
+      {
+        "name": "penadol",
+        "dose": "2",
+        "frequency": "2.4"
+      }
+    ],
+    "allergies": [
+      "latex"
+    ],
+    "medical_history": [
+      "asthma"
+    ],
+    "lifestyle": {
+      "smoking": "No",
+      "activity_level": "Moderate",
+      "sleep_hours": "12",
+      "diet_quality": "Fair"
+    }
   }
 ]

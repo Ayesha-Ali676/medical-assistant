@@ -1,311 +1,123 @@
-# 🚀 Setup Guide - MedAssist
+# 🛠️ MedAssist Setup Guide
 
-Complete installation guide for setting up MedAssist after cloning the repository.
+This guide covers the complete installation and configuration process for the MedAssist Clinical Decision Support System.
 
----
-
-## Prerequisites
+## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-- **Python 3.10 or higher** - [Download Python](https://www.python.org/downloads/)
-- **Node.js 18 or higher** - [Download Node.js](https://nodejs.org/)
-- **Git** - [Download Git](https://git-scm.com/)
+1. **Python 3.10+**: [Download Python](https://www.python.org/downloads/)
+   - Verify with `python --version`
+2. **Node.js 18+**: [Download Node.js](https://nodejs.org/)
+   - Verify with `node --version`
+3. **Git**: [Download Git](https://git-scm.com/)
 
 ---
 
-## Step 1: Clone the Repository
+## 🔧 Backend Setup (FastAPI)
 
-```bash
-git clone <repository-url>
-cd medical-assistant
-```
+The backend handles AI processing, database management, and authentication.
+
+1. **Navigate to the backend directory**
+   ```bash
+   cd backend
+   ```
+
+2. **Create a Virtual Environment (Recommended)**
+   ```bash
+   python -m venv venv
+   
+   # Windows
+   ..\venv\Scripts\activate
+   
+   # Mac/Linux
+   source venv/bin/activate
+   ```
+
+3. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure Environment Variables**
+   Create a file named `.env` in the `backend` folder with the following content:
+   ```env
+   # Get your key from: https://makersuite.google.com/app/apikey
+   GEMINI_API_KEY=your_actual_api_key_here
+   
+   # Server Configuration
+   PORT=8000
+   ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+   ```
+
+5. **Start the Backend Server**
+   ```bash
+   python main.py
+   # OR
+   uvicorn main:app --reload
+   ```
+   *The server should now be running at `http://127.0.0.1:8000`*
 
 ---
 
-## Step 2: Backend Setup
+## 🎨 Frontend Setup (React)
 
-### 2.1 Create Virtual Environment
+The frontend provides the clinical interface.
+
+1. **Navigate to the frontend directory**
+   ```bash
+   cd frontend
+   ```
+
+2. **Install Node Packages**
+   ```bash
+   npm install
+   ```
+
+3. **Start the Development Server**
+   ```bash
+   npm run dev
+   ```
+   *Access the app at `http://localhost:5173`*
+
+---
+
+## 🚀 Quick Start Script
+
+For convenience, you can start both services with a single command from the root directory:
 
 **Windows:**
 ```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate
-```
-
-**Linux/Mac:**
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 2.2 Install Python Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-**Required packages:**
-- `fastapi` - Web framework
-- `uvicorn` - ASGI server
-- `google-genai` - Gemini AI integration
-- `python-dotenv` - Environment variables
-- `requests` - HTTP library
-
-### 2.3 Configure Environment Variables
-
-Create a `.env` file in the `backend` folder:
-
-```bash
-cd backend
-# Create .env file
-```
-
-Add the following content to `.env`:
-
-```env
-# Gemini AI Configuration
-GEMINI_API_KEY=your_gemini_api_key_here
-
-# Server Configuration
-PORT=8000
-ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-
-# Clinical Safety Features
-ENABLE_CLINICAL_SAFETY=true
-```
-
-**Get your Gemini API key:**
-1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create a new API key
-3. Copy and paste it into the `.env` file
-
----
-
-## Step 3: Frontend Setup
-
-### 3.1 Navigate to Frontend Directory
-
-```bash
-cd ../frontend
-```
-
-### 3.2 Install Node Dependencies
-
-```bash
-npm install
-```
-
-This will install:
-- React
-- Vite
-- Axios
-- Lucide React (icons)
-- Other development dependencies
-
----
-
-## Step 4: Running the Application
-
-### Option 1: Using the Start Script (Recommended)
-
-**Windows:**
-```bash
-cd ..
 start.bat
 ```
 
-This will:
-1. Start the backend server on `http://localhost:8000`
-2. Start the frontend dev server on `http://localhost:5173`
-3. Open your default browser automatically
-
-### Option 2: Manual Start
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux/Mac
-python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm run dev
-```
-
 ---
 
-## Step 5: Verify Installation
+## 🆘 Troubleshooting
 
-### 5.1 Check Backend
+### Common Backend Issues
 
-Open your browser and navigate to:
-- **Health Check:** http://localhost:8000/health
-- **API Documentation:** http://localhost:8000/docs
-- **Patients Endpoint:** http://localhost:8000/patients
+**Error: `Module not found`**
+- Ensure you activated your virtual environment.
+- Re-run `pip install -r requirements.txt`.
 
-You should see JSON responses for each endpoint.
+**Error: `Model not found` (404)**
+- Updates to the Google GenAI SDK can sometimes cause version mismatches.
+- Ensure your `.env` has a valid `GEMINI_API_KEY`.
+- The system is configured to auto-fallback to available models (Gemini 2.0 -> Flash).
 
-### 5.2 Check Frontend
+**Error: Port 8000 in use**
+- Kill the process using port 8000:
+  ```bash
+  netstat -ano | findstr :8000
+  taskkill /PID <PID> /F
+  ```
 
-Navigate to:
-- **Application:** http://localhost:5173
+### Common Frontend Issues
 
-You should see the MedAssist dashboard with patient data.
+**Error: `Vite not found`**
+- Run `npm install` again to ensure dev dependencies are installed.
 
----
-
-## Troubleshooting
-
-### Backend Issues
-
-**Issue: `ModuleNotFoundError`**
-```bash
-# Solution: Ensure virtual environment is activated and dependencies are installed
-cd backend
-venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-**Issue: Port 8000 already in use**
-```bash
-# Windows - Find and kill process
-netstat -ano | findstr :8000
-taskkill /PID <PID> /F
-
-# Linux/Mac
-lsof -ti:8000 | xargs kill -9
-```
-
-**Issue: Gemini API errors**
-- Verify your API key is correct in `backend/.env`
-- Check your API quota at [Google AI Studio](https://makersuite.google.com/)
-- Ensure `GEMINI_API_KEY` has no extra spaces or quotes
-
-### Frontend Issues
-
-**Issue: `npm install` fails**
-```bash
-# Solution: Clear npm cache and retry
-npm cache clean --force
-npm install
-```
-
-**Issue: Blank page or errors in console**
-```bash
-# Solution: Clear browser cache and restart dev server
-# Press Ctrl + Shift + R in browser
-# Stop frontend (Ctrl + C) and restart: npm run dev
-```
-
-**Issue: Cannot connect to backend**
-- Ensure backend is running on port 8000
-- Check browser console for CORS errors
-- Verify `ALLOWED_ORIGINS` in `backend/.env` includes `http://localhost:5173`
-
----
-
-## Development Commands
-
-### Backend
-
-```bash
-# Start backend with auto-reload
-cd backend
-venv\Scripts\activate
-uvicorn main:app --reload
-
-# Run tests (if available)
-pytest
-
-# Check Python version
-python --version
-```
-
-### Frontend
-
-```bash
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Check for linting issues
-npm run lint
-```
-
----
-
-## Project Structure After Setup
-
-```
-medical-assistant/
-├── backend/
-│   ├── venv/                 # Virtual environment (created)
-│   ├── .env                  # Environment variables (created)
-│   ├── main.py              # FastAPI application
-│   ├── ai_service.py        # Gemini AI integration
-│   ├── requirements.txt     # Python dependencies
-│   └── ...
-│
-├── frontend/
-│   ├── node_modules/        # Node dependencies (created)
-│   ├── src/
-│   │   ├── App.jsx         # Main application
-│   │   ├── components/     # React components
-│   │   └── ...
-│   ├── package.json        # Node dependencies
-│   └── ...
-│
-├── data/
-│   └── patients.json       # Sample patient data
-│
-├── start.bat               # Quick start script
-└── README.md              # Project overview
-```
-
----
-
-## Next Steps
-
-1. ✅ **Explore the Application**
-   - Navigate to http://localhost:5173
-   - Click on different patients
-   - Try the Emergency Dashboard
-   - Test the Doctor Tools
-
-2. ✅ **Read the Documentation**
-   - [README.md](README.md) - Project overview
-   - [WORKFLOW.md](WORKFLOW.md) - System workflows
-   - [PROBLEM_AND_SOLUTION.md](PROBLEM_AND_SOLUTION.md) - Project context
-
-3. ✅ **Customize**
-   - Add your own patient data in `data/patients.json`
-   - Modify UI components in `frontend/src/components/`
-   - Extend backend endpoints in `backend/main.py`
-
----
-
-## Support
-
-If you encounter any issues not covered in this guide:
-
-1. Check the [README.md](README.md) for additional information
-2. Review the API documentation at http://localhost:8000/docs
-3. Ensure all prerequisites are correctly installed
-4. Verify environment variables are properly configured
-
----
-
-**Setup Complete! 🎉**
-
-Your MedAssist Clinical Decision Support System is now ready to use.
+**Blank Screen**
+- Check the console (F12) for errors.
+- Ensure the backend is running and reachable.

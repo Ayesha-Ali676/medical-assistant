@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AlertTriangle, Activity, TrendingUp, TrendingDown, Minus, UserPlus, FileSearch, Home, Loader, Trash2 } from 'lucide-react';
+import { AlertTriangle, Activity, TrendingUp, TrendingDown, Minus, UserPlus, FileSearch, Home, Loader, Trash2, LogOut } from 'lucide-react';
 import PatientForm from './components/PatientForm';
 import ReportScanner from './components/ReportScanner';
-import EmergencyDashboard from './components/EmergencyDashboard';
 import DoctorDashboard from './components/DoctorDashboard';
+import Login from './components/Login';
+import Signup from './components/Signup';
 import './App.css';
 
 const App = () => {
@@ -32,10 +33,14 @@ const App = () => {
   const [backendError, setBackendError] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [analysisLoading, setAnalysisLoading] = useState(false);
+  
+  // Auth State
+  const [user, setUser] = useState(null);
+  const [authView, setAuthView] = useState('login'); // 'login' or 'signup'
 
   const api = axios.create({
     baseURL: 'http://127.0.0.1:8000',
-    timeout: 30000, // 30 second timeout for analysis
+    timeout: 120000, // 120 second timeout for analysis
   });
 
   // Delete patient function
@@ -248,6 +253,15 @@ const App = () => {
     );
   }
 
+  // Auth Flow
+  if (!user) {
+    if (authView === 'login') {
+      return <Login onLogin={setUser} onSwitchToSignup={() => setAuthView('signup')} />;
+    } else {
+      return <Signup onSwitchToLogin={() => setAuthView('login')} />;
+    }
+  }
+
   return (
     <div className="clinical-workstation">
       {/* Header Bar */}
@@ -266,13 +280,7 @@ const App = () => {
             >
               <Home className="w-4 h-4" /> Dashboard
             </button>
-            <button 
-              className={`nav-item ${activeTab === 'emergency' ? 'active' : ''}`}
-              onClick={() => setActiveTab('emergency')}
-              style={{ color: '#dc2626', fontWeight: 'bold' }}
-            >
-              <AlertTriangle className="w-4 h-4" /> 🚨 Emergency Alert
-            </button>
+
             <button 
               className={`nav-item ${activeTab === 'add-patient' ? 'active' : ''}`}
               onClick={() => setActiveTab('add-patient')}
@@ -294,8 +302,31 @@ const App = () => {
             </button>
           </nav>
           <div className="user-profile">
-            <span className="physician-name"></span>
-            <span className="department"></span>
+            <span className="physician-name">Dr. {user.full_name}</span>
+            <span className="department">{user.medical_license_id}</span>
+            <button
+              onClick={() => {
+                setUser(null);
+                setAuthView('login');
+              }}
+              title="Logout"
+              style={{
+                background: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '6px',
+                borderRadius: '8px',
+                marginLeft: '12px',
+                color: 'rgba(255,255,255,0.8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = '#fff'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.8)'}
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </div>
       </header>
@@ -559,15 +590,6 @@ const App = () => {
               )}
             </aside>
           </>
-        ) : activeTab === 'emergency' ? (
-          <div className="full-width-panel">
-            <EmergencyDashboard 
-              patient={selectedPatient}
-              onSOSTriggered={(alertData) => {
-                console.log('SOS Triggered:', alertData);
-              }}
-            />
-          </div>
         ) : activeTab === 'doctor' ? (
           <div className="full-width-panel">
             <DoctorDashboard patient={selectedPatient} />

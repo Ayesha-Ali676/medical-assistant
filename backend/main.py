@@ -16,6 +16,8 @@ from emergency_alerts import EmergencyAlert, AlertLevel, create_alert, get_patie
 from demo_scenarios import DEMO_PATIENTS, DEMO_ALERTS, get_demo_patient, get_all_demo_patients, get_demo_alerts
 import traceback
 import logging
+import auth
+from auth import UserSignup, UserLogin, create_user, verify_user
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,7 +34,7 @@ app = FastAPI(
 )
 
 # Configure CORS for React frontend
-allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174")
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,http://127.0.0.1:5176")
 allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",")]
 print(f"CORS Allowed Origins: {allowed_origins}")
 app.add_middleware(
@@ -59,6 +61,21 @@ async def health_check():
         "service": "MedAssist Backend",
         "version": "2.0.0"
     }
+
+@app.post("/signup")
+async def signup(user: UserSignup):
+    if create_user(user):
+        return {"status": "success", "message": "User created successfully"}
+    else:
+        raise HTTPException(status_code=400, detail="Username already exists")
+
+@app.post("/login")
+async def login(credentials: UserLogin):
+    user = verify_user(credentials)
+    if user:
+        return {"status": "success", "user": user}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
 @app.get("/patients", response_model=List[dict])
 async def get_patients():
