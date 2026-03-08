@@ -1,6 +1,4 @@
 # Environment Variables
-.env
-.env.local
 .env.*.local
 
 # Python
@@ -27,3 +25,4 @@ build/
 *.log
 ai_debug.log
 endpoint_hits.log
+config.bat
